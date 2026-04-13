@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, memo } from 'react';
 import { 
   AreaChart, 
   Area, 
@@ -35,7 +35,7 @@ import {
 } from 'date-fns';
 import { id } from 'date-fns/locale';
 
-export default function CashflowChart() {
+const CashflowChart = memo(function CashflowChart() {
   const [selectedMonth, setSelectedMonth] = useState<Date>(new Date());
   const [activePeriod, setActivePeriod] = useState<string>('');
 
@@ -271,4 +271,6 @@ export default function CashflowChart() {
       </div>
     </div>
   );
-}
+});
+
+export default CashflowChart;

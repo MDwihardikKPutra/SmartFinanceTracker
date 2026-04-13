@@ -166,8 +166,11 @@ export default function DashboardPage() {
   }, [transactions.length]); // Re-analyze when new data arrives
 
   return (
-    <div className="flex w-full h-full overflow-hidden bg-white">
-      <div className="flex-1 flex flex-col h-full overflow-hidden relative min-w-0 transition-all duration-500">
+    <div className="flex w-full h-full overflow-hidden bg-transparent">
+      <motion.div 
+        transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+        className="flex-1 flex flex-col h-full overflow-hidden relative min-w-0"
+      >
         
         <div className="w-full px-6 md:px-8 pt-4 flex flex-col pb-2 h-full">
             <motion.div 
@@ -361,7 +364,7 @@ export default function DashboardPage() {
         >
           <Sparkles className="w-6 h-6 text-indigo-400 group-hover:rotate-12 transition-transform" />
         </motion.button>
-      </div>
+      </motion.div>
 
       <AIChatSidebar isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
     </div>

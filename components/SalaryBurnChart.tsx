@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, memo } from 'react';
 import { 
   AreaChart, 
   Area, 
@@ -22,7 +22,7 @@ import {
 import { id } from 'date-fns/locale';
 import { Wallet, TrendingDown } from 'lucide-react';
 
-export default function SalaryBurnChart() {
+const SalaryBurnChart = memo(function SalaryBurnChart() {
   const transactions = useLiveQuery(() => db.transactions.toArray()) || [];
   const now = new Date();
 
@@ -124,4 +124,6 @@ export default function SalaryBurnChart() {
       </div>
     </div>
   );
-}
+});
+
+export default SalaryBurnChart;

@@ -82,12 +82,14 @@ export default function AIChatSidebar({ isOpen, onClose }: AIChatSidebarProps) {
 
   return (
     <motion.div 
-        initial={false}
+        initial={{ width: 0, opacity: 0 }}
         animate={{ 
             width: isOpen ? 400 : 0,
             opacity: isOpen ? 1 : 0
         }}
-        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+        exit={{ width: 0, opacity: 0 }}
+        transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+        style={{ willChange: 'width, opacity' }}
         className="h-full border-l border-neutral-100 bg-white flex flex-col overflow-hidden shrink-0"
     >
         {/* Header */}
