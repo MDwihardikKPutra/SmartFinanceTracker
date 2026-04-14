@@ -20,8 +20,8 @@ async function getBestModels(apiKey: string): Promise<string[]> {
     if (discovered.length === 0) return ["gemini-1.5-flash"];
 
     const preferred = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-1.5-flash-8b"];
-    const priority = preferred.filter(p => discovered.includes(p));
-    const others = discovered.filter(d => !priority.includes(d));
+    const priority = preferred.filter((p: string) => discovered.includes(p));
+    const others = discovered.filter((d: string) => !priority.includes(d));
     const shuffledOthers = others.sort(() => Math.random() - 0.5);
 
     modelCache = [...priority, ...shuffledOthers].slice(0, 15); 
