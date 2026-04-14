@@ -1,48 +1,101 @@
 import { db } from './db';
-import { setMonth, startOfMonth, addDays, format, subDays } from 'date-fns';
+import { setMonth, startOfMonth, addDays, format } from 'date-fns';
+
+const REALISTIC_DESCRIPTIONS = {
+    'Makanan & Minuman': [
+        'Starbucks Reserve SCBD', 'Lunch at Oma Elly', 'Fine Dining Grand Indonesia', 
+        'Dinner at Union Brasserie', 'Breakfast at Hyatt', 'Catering Karyawan Kantor',
+        'Kopi Kenangan Heritage', 'Bazaar Kuliner Elit'
+    ],
+    'Transportasi': [
+        'Bensin Pertamax Turbo', 'Maintenance Mercedes S-Class', 'GrabCar Premium Executive',
+        'Tiket Garuda First Class', 'Parkir VIP Mall', 'Service Tesla Model S',
+        'Toll Road Access', 'Asuransi Kendaraan Mewah'
+    ],
+    'Tagihan': [
+        'Listrik Kantor Pusat', 'Wifi Dedicated Fiber', 'Membership Golf Club',
+        'Iuran Apartemen Penthouse', 'Subscription Bloomberg Terminal', 'Asuransi Kesehatan Internasional'
+    ],
+    'Belanja': [
+        'Beli Laptop Workstation', 'Furniture Kantor Baru', 'Aset Jam Tangan Koleksi',
+        'Gadget Flagship Terbaru', 'Donasi Yayasan Buffet', 'Koleksi Buku Langka'
+    ],
+    'Gaji': [
+        'Management Salary', 'Bonus Performa Tahunan', 'Dividen Berkshire Hathaway',
+        'Dividen Apple Inc.', 'Gaji Pokok Direksi'
+    ],
+    'Freelance': [
+        'Profit Penjualan Saham', 'Consultancy Fee Projects', 'Trading Gain Assets',
+        'Karya Seni Investasi', 'Passive Income Property'
+    ],
+    'Lainnya': [
+        'Biaya Administrasi Bank VIP', 'Pajak Aset Tahunan', 'Hobi Filateli',
+        'Kursus Investasi Lanjutan'
+    ]
+};
+
+function getRandom(arr: string[]) {
+    return arr[Math.floor(Math.random() * arr.length)];
+}
 
 export async function seedDummyData() {
-  const count = await db.transactions.count();
-  // Force re-seed for the new 'Dramatic Monthly' scenario
-  console.log('Force resetting and re-seeding data...');
-
   await db.transactions.clear();
 
-  const now = new Date();
   const dummyTransactions: any[] = [];
   
-  // Loop through January (0) to December (11)
+  // Generate data for the full year (Jan to Dec)
   for (let month = 0; month < 12; month++) {
     const monthDate = startOfMonth(setMonth(new Date(), month));
-    monthDate.setHours(12, 0, 0, 0);
     
-    // Generate 30 days of data for EACH month (HEMAT EDITION - 4JT SALARY)
-    for (let i = 27; i >= 0; i--) {
+    // 1. HIGH INCOME (Buffet Style: 150jt - 450jt dynamic)
+    const monthlySalary = 250000000 + Math.floor(Math.random() * 200000000);
+    const dividend = 50000000 + Math.floor(Math.random() * 100000000);
+
+    dummyTransactions.push({
+        description: getRandom(REALISTIC_DESCRIPTIONS['Gaji']),
+        amount: monthlySalary,
+        category: 'Gaji',
+        type: 'income',
+        createdAt: addDays(monthDate, 0),
+    });
+
+    dummyTransactions.push({
+        description: getRandom(REALISTIC_DESCRIPTIONS['Freelance']),
+        amount: dividend,
+        category: 'Freelance',
+        type: 'income',
+        createdAt: addDays(monthDate, 14),
+    });
+
+    // 2. DAILY EXPENSES (Buffet Tier: 100rb - 5jt per transaction)
+    for (let i = 28; i >= 1; i--) {
         const date = addDays(monthDate, i);
         
-        // 1. INCOME (Total 4jt: 3.5jt Salary + 500k Side Hustle)
-        if (i === 0 || i === 14) {
-          dummyTransactions.push({
-            description: i === 0 ? `Gaji Utama - ${formatMonthFull(month)}` : `Freelance Bonus #${month}`,
-            amount: i === 0 ? (3400000 + Math.floor(Math.random() * 200000)) : 500000,
-            category: 'Gaji',
-            type: 'income',
-            createdAt: date,
-          });
-        }
-
-        // 2. DAILY EXPENSES (Scaled down to fit 4jt budget)
-        const dailyExpenseCount = Math.floor(Math.random() * 2) + 1; 
-        for (let j = 0; j < dailyExpenseCount; j++) {
-            const isBigSpike = Math.random() > 0.92; // Rarely (8% chance)
-            const amount = isBigSpike 
-                ? Math.floor(Math.random() * 500000) + 300000 // Spike: 300rb - 800rb
-                : Math.floor(Math.random() * 40000) + 20000;    // Reguler: 20rb - 60rb
+        // Random number of transactions per day
+        const dailyCount = Math.floor(Math.random() * 3); 
+        for (let j = 0; j < dailyCount; j++) {
+            const isBigAsset = Math.random() > 0.95; // Big luxury item
+            const category = isBigAsset ? 'Belanja' : (Math.random() > 0.4 ? 'Makanan & Minuman' : 'Transportasi');
+            
+            const amount = isBigAsset 
+                ? Math.floor(Math.random() * 50000000) + 10000000 // 10jt - 60jt
+                : Math.floor(Math.random() * 800000) + 150000;    // 150rb - 1jt
 
             dummyTransactions.push({
-                description: isBigSpike ? `Belanja Besar ${format(date, 'dd/MM')}` : `Harian ${format(date, 'dd/MM')}-${j}`,
+                description: getRandom(REALISTIC_DESCRIPTIONS[category as keyof typeof REALISTIC_DESCRIPTIONS] || REALISTIC_DESCRIPTIONS['Lainnya']),
                 amount: amount,
-                category: isBigSpike ? 'Belanja' : 'Makanan & Minuman',
+                category: category,
+                type: 'expense',
+                createdAt: date,
+            });
+        }
+
+        // Add recurring bills once a month
+        if (i === 5) {
+            dummyTransactions.push({
+                description: getRandom(REALISTIC_DESCRIPTIONS['Tagihan']),
+                amount: 5000000 + Math.floor(Math.random() * 10000000),
+                category: 'Tagihan',
                 type: 'expense',
                 createdAt: date,
             });
@@ -50,30 +103,6 @@ export async function seedDummyData() {
     }
   }
 
-  // ADD THE SPECIFIC ITEMS REQUESTED FOR RECENT ACTIVITY (Today: Apr 13)
-  const today = new Date();
-  const specificItems = [
-    { category: 'Gaji', amount: 3400000 + Math.floor(Math.random() * 200000), type: 'income', description: 'Gaji Masuk', createdAt: today },
-    { category: 'Makanan & Minuman', amount: 35000, type: 'expense', description: 'Makan Siang', createdAt: today },
-    { category: 'Transportasi', amount: 20000, type: 'expense', description: 'Gojek Kerja', createdAt: today },
-  ];
-
-  // Ensure some random variation so charts look "alive" on refresh
-  const data = [
-    { type: 'income', category: 'Salary', amount: 4000000 + (Math.random() * 200000), description: 'Gaji Bulanan', createdAt: now.getTime() },
-    { type: 'expense', category: 'Food', amount: 50000 + (Math.random() * 50000), description: 'Makan Siang', createdAt: now.getTime() - 1000 * 60 * 60 * 24 },
-    { type: 'expense', category: 'Transport', amount: 20000 + (Math.random() * 20000), description: 'Ojek Online', createdAt: now.getTime() - 1000 * 60 * 60 * 24 * 2 },
-    { type: 'expense', category: 'Utilities', amount: 150000, description: 'Listrik', createdAt: now.getTime() - 1000 * 60 * 60 * 24 * 3 },
-    { type: 'expense', category: 'Food', amount: 80000 + (Math.random() * 30000), description: 'Makan Malam', createdAt: now.getTime() - 1000 * 60 * 60 * 24 * 4 },
-    { type: 'income', category: 'Freelance', amount: 500000 + (Math.random() * 100000), description: 'Proyek Sampingan', createdAt: now.getTime() - 1000 * 60 * 60 * 24 * 5 },
-    { type: 'expense', category: 'Entertainment', amount: 120000, description: 'Tiket Bioskop', createdAt: now.getTime() - 1000 * 60 * 60 * 24 * 6 },
-  ];
-
-  await db.transactions.bulkAdd([...dummyTransactions, ...specificItems]);
-  console.log('Final Dramatic Balanced Data Seeding Success');
-}
-
-function formatMonthFull(m: number) {
-    const names = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-    return names[m];
+  await db.transactions.bulkAdd(dummyTransactions);
+  console.log('Buffet Tier Data Seeding Success');
 }

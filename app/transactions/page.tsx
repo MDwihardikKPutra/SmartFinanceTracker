@@ -17,9 +17,17 @@ import { db } from '@/lib/db';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { motion, AnimatePresence } from 'framer-motion';
 
+const MONTHS = [
+    'Semua', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+];
+
 export default function TransactionsPage() {
+  const now = new Date();
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<'all' | 'income' | 'expense'>('all');
+  const [filterMonth, setFilterMonth] = useState<string>((now.getMonth() + 1).toString());
+  const [filterYear, setFilterYear] = useState<string>(now.getFullYear().toString());
   
   // CRUD States
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -37,10 +45,14 @@ export default function TransactionsPage() {
   ) || [];
 
   const filteredTransactions = transactions.filter(t => {
+    const d = new Date(t.createdAt);
     const matchesSearch = (t.description || '').toLowerCase().includes(search.toLowerCase()) || 
                           (t.category || '').toLowerCase().includes(search.toLowerCase());
     const matchesType = typeFilter === 'all' || t.type === typeFilter;
-    return matchesSearch && matchesType;
+    const matchesMonth = filterMonth === 'all' || (d.getMonth() + 1).toString() === filterMonth;
+    const matchesYear = filterYear === 'all' || d.getFullYear().toString() === filterYear;
+    
+    return matchesSearch && matchesType && matchesMonth && matchesYear;
   });
 
   const openAddModal = () => {
@@ -105,19 +117,62 @@ export default function TransactionsPage() {
             </button>
         </div>
         
-        {/* Filters */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 shrink-0">
-            <div className="flex items-center gap-1 p-1 bg-neutral-50 border border-neutral-100 rounded-xl w-fit">
-                {(['all', 'income', 'expense'] as const).map((mode) => (
-                    <button key={mode} onClick={() => setTypeFilter(mode)} className={cn("px-5 py-2 rounded-xl text-[11px] font-semibold transition-all", typeFilter === mode ? "bg-white text-black border border-neutral-100 shadow-none" : "text-black/40 hover:text-black/60")}>
-                        {mode === 'all' ? 'Semua' : mode === 'income' ? 'Masuk' : 'Keluar'}
-                    </button>
-                ))}
+        {/* Executive Command Bar - Unified & Symmetrical */}
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-8 shrink-0">
+            <div className="flex items-center bg-neutral-50 border border-neutral-100 rounded-xl h-11 overflow-hidden">
+                {/* Type Toggles */}
+                <div className="flex items-center h-full px-1">
+                    {(['all', 'income', 'expense'] as const).map((mode) => (
+                        <button 
+                            key={mode} 
+                            onClick={() => setTypeFilter(mode)} 
+                            className={cn(
+                                "h-9 px-4 rounded-lg text-[11px] font-bold transition-all", 
+                                typeFilter === mode 
+                                    ? "bg-white text-black border border-neutral-100 shadow-sm" 
+                                    : "text-black/40 hover:text-black/60"
+                            )}
+                        >
+                            {mode === 'all' ? 'Semua' : mode === 'income' ? 'Masuk' : 'Keluar'}
+                        </button>
+                    ))}
+                </div>
+
+                <div className="w-px h-6 bg-neutral-200 ml-1" />
+
+                {/* Date Selection */}
+                <div className="flex items-center h-full px-2">
+                    <select 
+                        value={filterMonth} 
+                        onChange={(e) => setFilterMonth(e.target.value)}
+                        className="bg-transparent text-[11px] font-bold text-black px-3 h-full outline-none cursor-pointer hover:text-indigo-600 transition-colors"
+                    >
+                        {MONTHS.map((m, i) => <option key={m} value={i === 0 ? 'all' : i.toString()}>{m}</option>)}
+                    </select>
+                    
+                    <div className="w-px h-4 bg-neutral-200 mx-1" />
+                    
+                    <select 
+                        value={filterYear} 
+                        onChange={(e) => setFilterYear(e.target.value)}
+                        className="bg-transparent text-[11px] font-bold text-black px-3 h-full outline-none cursor-pointer hover:text-indigo-600 transition-colors"
+                    >
+                        <option value="all">Tahun</option>
+                        {[2024, 2025, 2026].map(y => <option key={y} value={y.toString()}>{y}</option>)}
+                    </select>
+                </div>
             </div>
 
-            <div className="relative group md:min-w-[320px]">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-black/30 group-focus-within:text-black transition-colors" />
-                <input type="text" placeholder="Cari deskripsi atau kategori..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-11 pr-6 py-3 bg-neutral-50 border border-neutral-100 rounded-xl text-[12px] font-medium w-full focus:outline-none focus:border-neutral-300 transition-all outline-none" />
+            {/* Symmetrical Search Group */}
+            <div className="relative group w-full md:w-[320px]">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-black/30 group-focus-within:text-indigo-500 transition-colors" />
+                <input 
+                    type="text" 
+                    placeholder="Cari transaksi..." 
+                    value={search} 
+                    onChange={(e) => setSearch(e.target.value)} 
+                    className="pl-11 pr-4 h-11 bg-neutral-50 border border-neutral-100 rounded-xl text-[12px] font-semibold w-full focus:outline-none focus:border-indigo-200 focus:bg-white transition-all outline-none" 
+                />
             </div>
         </div>
 
