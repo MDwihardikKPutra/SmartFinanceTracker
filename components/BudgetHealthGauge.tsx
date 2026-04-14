@@ -41,8 +41,8 @@ const BudgetHealthGauge: React.FC<BudgetHealthGaugeProps> = ({ spent, total }) =
             </ResponsiveContainer>
             
             <div className="absolute top-[65%] left-1/2 -translate-x-1/2 text-center">
-                <p className="text-xl font-black text-neutral-900 leading-none">{percentage}%</p>
-                <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-tighter mt-1">Sisa Budget</p>
+                <p className="text-xl font-semibold text-black leading-none">{percentage}%</p>
+                <p className="text-[10px] font-semibold text-black mt-1">Sisa Budget</p>
             </div>
         </div>
     );

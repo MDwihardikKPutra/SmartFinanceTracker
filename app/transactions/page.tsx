@@ -2,157 +2,242 @@
 
 import React, { useState } from 'react';
 import { 
-    History, 
     Search, 
-    Filter, 
-    ArrowUpRight, 
-    ArrowDownRight, 
-    ChevronLeft,
-    Utensils,
-    Bus,
-    Receipt,
-    ShoppingBag,
-    Wallet,
-    MoreHorizontal
+    MoreHorizontal,
+    TrendingUp,
+    TrendingDown,
+    Plus,
+    X,
+    Trash2,
+    Save
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { useRouter } from 'next/navigation';
+import { cn, formatCurrency, formatDate } from '@/lib/utils';
+import { CATEGORY_CONFIG, CATEGORIES } from '@/lib/constants';
 import { db } from '@/lib/db';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { format } from 'date-fns';
-import { id } from 'date-fns/locale';
-
-const categoryIcons: Record<string, any> = {
-  'Makanan & Minuman': { icon: Utensils, bg: 'bg-orange-50', text: 'text-orange-500' },
-  'Transportasi': { icon: Bus, bg: 'bg-blue-50', text: 'text-blue-500' },
-  'Tagihan': { icon: Receipt, bg: 'bg-purple-50', text: 'text-purple-500' },
-  'Belanja': { icon: ShoppingBag, bg: 'bg-pink-50', text: 'text-pink-500' },
-  'Gaji': { icon: Wallet, bg: 'bg-green-50', text: 'text-green-500' },
-  'Freelance': { icon: ArrowUpRight, bg: 'bg-emerald-50', text: 'text-emerald-500' },
-  'default': { icon: Wallet, bg: 'bg-neutral-50', text: 'text-neutral-500' }
-};
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function TransactionsPage() {
-  const router = useRouter();
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<'all' | 'income' | 'expense'>('all');
+  
+  // CRUD States
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [formData, setFormData] = useState({
+    description: '',
+    amount: '',
+    type: 'expense' as 'income' | 'expense',
+    category: 'Makanan & Minuman',
+    createdAt: new Date().toISOString().split('T')[0]
+  });
 
   const transactions = useLiveQuery(() => 
     db.transactions.orderBy('createdAt').reverse().toArray()
   ) || [];
 
   const filteredTransactions = transactions.filter(t => {
-    const matchesSearch = t.description.toLowerCase().includes(search.toLowerCase()) || 
-                          t.category.toLowerCase().includes(search.toLowerCase());
+    const matchesSearch = (t.description || '').toLowerCase().includes(search.toLowerCase()) || 
+                          (t.category || '').toLowerCase().includes(search.toLowerCase());
     const matchesType = typeFilter === 'all' || t.type === typeFilter;
     return matchesSearch && matchesType;
   });
 
-  return (
-    <div className="w-full flex flex-col animate-in fade-in duration-700">
-      {/* Header Area - Ultra Clean */}
-      <div className="flex flex-col gap-2 mb-8">
-            <h1 className="text-3xl font-bold text-neutral-900 tracking-tight">Riwayat Transaksi</h1>
-            <p className="text-neutral-500 text-sm">Rekapitulasi seluruh aliran kas masuk dan keluar.</p>
-      </div>
+  const openAddModal = () => {
+    setEditingId(null);
+    setFormData({
+        description: '',
+        amount: '',
+        type: 'expense',
+        category: 'Makanan & Minuman',
+        createdAt: new Date().toISOString().split('T')[0]
+    });
+    setIsModalOpen(true);
+  };
 
-      <div className="bg-white rounded-3xl border border-neutral-200 shadow-[0_8px_30px_rgb(0,0,0,0.02)] overflow-hidden flex flex-col">
-        {/* Integrated Filter & Search Bar */}
-        <div className="p-6 border-b border-neutral-100 flex flex-col md:flex-row md:items-center justify-between gap-6 bg-neutral-50/30">
-            <div className="flex items-center gap-1 p-1 bg-neutral-100/50 rounded-xl w-fit">
+  const openEditModal = (t: any) => {
+    setEditingId(t.id);
+    setFormData({
+        description: t.description,
+        amount: t.amount.toString(),
+        type: t.type,
+        category: t.category,
+        createdAt: new Date(t.createdAt).toISOString().split('T')[0]
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const data = {
+        ...formData,
+        amount: Number(formData.amount),
+        createdAt: new Date(formData.createdAt)
+    };
+
+    if (editingId) {
+        await db.transactions.update(editingId, data);
+    } else {
+        await db.transactions.add(data);
+    }
+    setIsModalOpen(false);
+  };
+
+  const handleDelete = async () => {
+    if (editingId && window.confirm("Hapus transaksi ini?")) {
+        await db.transactions.delete(editingId);
+        setIsModalOpen(false);
+    }
+  };
+
+  return (
+    <div className="w-full h-full flex flex-col animate-in fade-in duration-700 pt-3 pb-6 overflow-hidden relative">
+      <div className="flex-1 min-h-0 bg-white p-6 rounded-[1.5rem] border border-neutral-100 flex flex-col overflow-hidden relative">
+        
+        <div className="flex items-start justify-between mb-8 ml-1">
+            <div className="flex flex-col">
+                <h1 className="text-2xl font-semibold text-black tracking-tight leading-none mb-2">Riwayat Transaksi</h1>
+                <p className="text-black/50 text-[11px] font-medium tracking-tight">Monitoring dan manajemen seluruh aliran dana operasional.</p>
+            </div>
+            <button onClick={openAddModal} className="flex items-center gap-2 px-5 py-2.5 bg-black text-white rounded-xl text-[11px] font-bold tracking-tight hover:scale-[1.02] active:scale-95 transition-all">
+                <Plus className="w-4 h-4" />
+                Tambah Transaksi
+            </button>
+        </div>
+        
+        {/* Filters */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 shrink-0">
+            <div className="flex items-center gap-1 p-1 bg-neutral-50 border border-neutral-100 rounded-xl w-fit">
                 {(['all', 'income', 'expense'] as const).map((mode) => (
-                    <button
-                        key={mode}
-                        onClick={() => setTypeFilter(mode)}
-                        className={cn(
-                            "px-5 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all",
-                            typeFilter === mode 
-                                ? "bg-white text-blue-600 shadow-sm" 
-                                : "text-neutral-400 hover:text-neutral-500"
-                        )}
-                    >
+                    <button key={mode} onClick={() => setTypeFilter(mode)} className={cn("px-5 py-2 rounded-xl text-[11px] font-semibold transition-all", typeFilter === mode ? "bg-white text-black border border-neutral-100 shadow-none" : "text-black/40 hover:text-black/60")}>
                         {mode === 'all' ? 'Semua' : mode === 'income' ? 'Masuk' : 'Keluar'}
                     </button>
                 ))}
             </div>
 
-            <div className="relative group min-w-[300px]">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-300 group-focus-within:text-blue-500 transition-colors" />
-                <input 
-                    type="text"
-                    placeholder="Cari transaksi..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="pl-11 pr-6 py-2.5 bg-white border border-neutral-200 rounded-xl text-xs font-medium w-full focus:ring-2 focus:ring-blue-100 transition-all outline-none"
-                />
+            <div className="relative group md:min-w-[320px]">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-black/30 group-focus-within:text-black transition-colors" />
+                <input type="text" placeholder="Cari deskripsi atau kategori..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-11 pr-6 py-3 bg-neutral-50 border border-neutral-100 rounded-xl text-[12px] font-medium w-full focus:outline-none focus:border-neutral-300 transition-all outline-none" />
             </div>
         </div>
 
-        <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-22rem)] custom-scrollbar border-t border-neutral-100">
-          <table className="w-full border-collapse text-left">
-            <thead className="sticky top-0 z-10 bg-neutral-50 shadow-[0_1px_0_rgba(0,0,0,0.05)]">
-              <tr>
-                <th className="px-8 py-5.5 text-[10px] font-bold text-neutral-400 uppercase tracking-widest w-40">Tanggal</th>
-                <th className="px-8 py-5.5 text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Deskripsi</th>
-                <th className="px-8 py-5.5 text-[10px] font-bold text-neutral-400 uppercase tracking-widest w-32">Kategori</th>
-                <th className="px-8 py-5.5 text-[10px] font-bold text-neutral-400 uppercase tracking-widest w-24">Tipe</th>
-                <th className="px-8 py-5.5 text-[10px] font-bold text-neutral-400 uppercase tracking-widest text-right w-44">Jumlah</th>
-                <th className="px-8 py-5.5 text-[10px] font-bold text-neutral-400 uppercase tracking-widest w-16"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-neutral-100">
+        {/* Unified Ledger */}
+        <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar min-h-0">
+          <div className="w-full min-w-[700px]">
+             <div className="flex items-center px-4 py-4 border-b border-neutral-50 sticky top-0 bg-white z-10 space-x-4">
+              <div className="w-32 text-[10px] font-semibold text-black/40 tracking-tight text-center">Tanggal</div>
+              <div className="flex-1 text-[10px] font-semibold text-black/40 tracking-tight">Deskripsi</div>
+              <div className="w-32 text-[10px] font-semibold text-black/40 tracking-tight">Kategori</div>
+              <div className="w-24 text-[10px] font-semibold text-black/40 tracking-tight">Tipe</div>
+              <div className="w-40 text-[10px] font-semibold text-black/40 tracking-tight text-right">Jumlah</div>
+              <div className="w-10"></div>
+            </div>
+
+            <div className="divide-y divide-neutral-50">
               {filteredTransactions.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-6 py-20 text-center">
-                    <div className="flex flex-col items-center">
-                        <Search className="w-10 h-10 text-neutral-200 mb-4" />
-                        <p className="text-neutral-400 font-medium">Tidak ada transaksi ditemukan</p>
-                    </div>
-                  </td>
-                </tr>
+                <div className="py-24 flex flex-col items-center">
+                    <div className="w-12 h-12 bg-neutral-50 rounded-xl flex items-center justify-center mb-4"><Search className="w-5 h-5 text-black/20" /></div>
+                    <p className="text-black/30 text-[12px] font-semibold">Tidak ada transaksi ditemukan</p>
+                </div>
               ) : (
-                filteredTransactions.map((t, idx) => (
-                  <tr key={t.id || idx} className="hover:bg-blue-50/30 even:bg-neutral-50/30 transition-colors group">
-                    <td className="px-8 py-5.5 text-xs font-medium text-neutral-500">
-                        {format(new Date(t.createdAt), 'dd/MM/yyyy')}
-                    </td>
-                    <td className="px-8 py-5.5">
-                        <p className="text-sm font-medium text-neutral-900 truncate max-w-md">
-                            {t.description || '-'}
-                        </p>
-                    </td>
-                    <td className="px-8 py-5.5">
-                        <span className="px-3 py-1 bg-neutral-100 text-neutral-500 rounded-full text-[10px] font-bold uppercase tracking-tighter whitespace-nowrap">
-                            {t.category}
-                        </span>
-                    </td>
-                    <td className="px-8 py-5.5">
-                        <div className={cn(
-                            "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider",
-                            t.type === 'income' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
-                        )}>
-                            <div className={cn("w-1.5 h-1.5 rounded-full", t.type === 'income' ? 'bg-green-500' : 'bg-red-500')} />
-                            {t.type === 'income' ? 'Masuk' : 'Keluar'}
-                        </div>
-                    </td>
-                    <td className={cn(
-                        "px-8 py-5.5 text-right text-sm font-bold font-mono tracking-tight",
-                        t.type === 'income' ? 'text-green-600' : 'text-neutral-900'
-                    )}>
-                        {t.type === 'income' ? '+' : '-'} {t.amount.toLocaleString('id-ID')}
-                    </td>
-                    <td className="px-8 py-5.5 text-right">
-                        <button className="p-2 rounded-lg text-neutral-300 hover:bg-white hover:text-neutral-500 hover:shadow-sm transition-all opacity-0 group-hover:opacity-100">
-                            <MoreHorizontal className="w-4 h-4" />
-                        </button>
-                    </td>
-                  </tr>
-                ))
+                filteredTransactions.map((t, idx) => {
+                  const cat = CATEGORY_CONFIG[t.category] || CATEGORY_CONFIG.default;
+                  const Icon = cat.icon;
+                  return (
+                    <div key={t.id || idx} onClick={() => openEditModal(t)} className="flex items-center px-4 py-4 hover:bg-neutral-50/50 transition-colors group cursor-pointer space-x-4">
+                      <div className="w-32 text-[11px] font-semibold text-black/40 text-center">{formatDate(t.createdAt)}</div>
+                      <div className="flex-1 flex items-center gap-3">
+                          <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center border border-neutral-100 shrink-0", cat.bg)}>
+                              <Icon className={cn("w-4 h-4", cat.color)} />
+                          </div>
+                          <p className="text-[12px] font-semibold text-black truncate max-w-xs">{t.description || t.category}</p>
+                      </div>
+                      <div className="w-32 flex">
+                          <span className="px-2.5 py-1 bg-neutral-50 border border-neutral-100 text-black/60 rounded-lg text-[9px] font-semibold tracking-tight">{t.category}</span>
+                      </div>
+                      <div className="w-24">
+                          <div className={cn("inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-[9px] font-semibold", t.type === 'income' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-neutral-50 text-black/60 border border-neutral-100')}>
+                              {t.type === 'income' ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                              {t.type === 'income' ? 'Masuk' : 'Keluar'}
+                          </div>
+                      </div>
+                      <div className={cn("w-40 text-right text-[13px] font-semibold tracking-tight", t.type === 'income' ? 'text-emerald-600' : 'text-black')}>
+                          {t.type === 'income' ? '+' : '-'} {formatCurrency(t.amount).replace('Rp ', '')}
+                      </div>
+                      <div className="w-10 text-right">
+                          <button className="w-8 h-8 rounded-lg flex items-center justify-center text-black/20 group-hover:text-black hover:bg-white transition-all">
+                              <MoreHorizontal className="w-4 h-4" />
+                          </button>
+                      </div>
+                    </div>
+                  );
+                })
               )}
-            </tbody>
-          </table>
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* CRUD Modal */}
+      <AnimatePresence>
+        {isModalOpen && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsModalOpen(false)} className="absolute inset-0 bg-black/10 backdrop-blur-[2px]" />
+                <motion.div initial={{ opacity: 0, scale: 0.95, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 10 }} className="relative w-full max-w-[480px] bg-white rounded-[1.5rem] border border-neutral-100 p-8">
+                    <div className="flex items-center justify-between mb-8">
+                        <div>
+                            <h2 className="text-xl font-semibold text-black tracking-tight">{editingId ? 'Edit Transaksi' : 'Tambah Transaksi'}</h2>
+                            <p className="text-[10px] text-black/50 font-medium mt-1 uppercase tracking-widest leading-none">Your Command Operational</p>
+                        </div>
+                        <button onClick={() => setIsModalOpen(false)} className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-neutral-50"><X className="w-5 h-5 text-black/30" /></button>
+                    </div>
+
+                    <form onSubmit={handleSave} className="space-y-6">
+                        <div className="grid grid-cols-2 gap-2 p-1 bg-neutral-50 border border-neutral-100 rounded-xl">
+                            {(['income', 'expense'] as const).map((type) => (
+                                <button key={type} type="button" onClick={() => setFormData({...formData, type})} className={cn("py-2.5 rounded-xl text-[11px] font-bold tracking-tight transition-all", formData.type === type ? "bg-white text-black border border-neutral-100 shadow-none" : "text-black/40 hover:text-black/60")}>
+                                    {type === 'income' ? 'Pemasukan' : 'Pengeluaran'}
+                                </button>
+                            ))}
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-bold text-black/40 ml-1">Jumlah (Rp)</label>
+                                <input type="number" required value={formData.amount} onChange={(e) => setFormData({...formData, amount: e.target.value})} className="w-full bg-neutral-50 border border-neutral-100 rounded-xl px-5 py-3 text-[12px] font-semibold focus:outline-none focus:border-black transition-all" />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-bold text-black/40 ml-1">Tanggal</label>
+                                <input type="date" required value={formData.createdAt} onChange={(e) => setFormData({...formData, createdAt: e.target.value})} className="w-full bg-neutral-50 border border-neutral-100 rounded-xl px-5 py-3 text-[12px] font-semibold focus:outline-none focus:border-black transition-all" />
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-bold text-black/40 ml-1">Deskripsi</label>
+                            <input type="text" required value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} className="w-full bg-neutral-50 border border-neutral-100 rounded-xl px-5 py-3 text-[12px] font-semibold focus:outline-none focus:border-black transition-all" />
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-bold text-black/40 ml-1">Kategori</label>
+                            <select value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value})} className="w-full bg-neutral-50 border border-neutral-100 rounded-xl px-5 py-3 text-[12px] font-semibold focus:outline-none focus:border-black transition-all appearance-none">
+                                {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                            </select>
+                        </div>
+
+                        <div className="flex items-center gap-3 pt-6">
+                            {editingId && (
+                                <button type="button" onClick={handleDelete} className="w-12 h-12 flex items-center justify-center rounded-xl bg-red-50 text-red-500 hover:bg-red-100 transition-colors"><Trash2 className="w-5 h-5" /></button>
+                            )}
+                            <button type="submit" className="flex-1 h-12 bg-black text-white rounded-xl text-[12px] font-bold tracking-tight hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-2">
+                                <Save className="w-4 h-4" />
+                                {editingId ? 'Simpan Perubahan' : 'Tambah Transaksi'}
+                            </button>
+                        </div>
+                    </form>
+                </motion.div>
+            </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

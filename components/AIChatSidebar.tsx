@@ -24,7 +24,7 @@ export default function AIChatSidebar({ isOpen, onClose }: AIChatSidebarProps) {
   const [messages, setMessages] = useState<Message[]>([
     { 
         role: 'assistant', 
-        content: "Halo! Saya SmartFinance GPT. Saya sudah merangkum data riwayat Anda. Silakan tanya apa saja tentang kondisi keuangan Anda!", 
+        content: "Halo Dyko! Saya siap bantu kelola keuanganmu hari ini. Mau catat transaksi baru atau ada yang mau ditanyakan soal budgetmu?", 
         timestamp: new Date() 
     }
   ]);
@@ -71,7 +71,46 @@ export default function AIChatSidebar({ isOpen, onClose }: AIChatSidebarProps) {
 
       const data = await response.json();
       if (response.ok) {
-        setMessages(prev => [...prev, { role: 'assistant', content: data.content, timestamp: new Date() }]);
+        let rawContent = data.content;
+        
+        // --- ACTION PARSER (RESILIENT) ---
+        const actionRegex = /\[\[ACTION:(.*?)\]\]/s;
+        const match = rawContent.match(actionRegex);
+        
+        if (match) {
+            try {
+                const cleanJson = match[1].replace(/```json|```/g, '').trim();
+                const actionData = JSON.parse(cleanJson);
+                
+                if (actionData.type === 'ADD_TRANSACTION') {
+                    const { amount, type, category, description, createdAt } = actionData.payload;
+                    
+                    // Sanitize amount: remove dots, commas, or currencies that might cause parsing failure
+                    const cleanAmount = String(amount).replace(/[.,]/g, '').replace(/[^0-9]/g, '');
+                    const parsedAmount = Number(cleanAmount);
+                    
+                    const validTypes = ['income', 'expense'];
+                    const finalType = validTypes.includes(type) ? type : 'expense';
+
+                    if (!isNaN(parsedAmount) && parsedAmount > 0) {
+                        await db.transactions.add({
+                            amount: parsedAmount,
+                            type: finalType,
+                            category: category || "Lainnya",
+                            description: description || "AI Transaction",
+                            createdAt: createdAt || new Date().toISOString()
+                        });
+                        console.log("✅ SmartFinance: Transaction added with precision.", { parsedAmount, finalType, createdAt });
+                    }
+                }
+            } catch (err) {
+                console.error("❌ SmartFinance: Action Parse Error:", err);
+            }
+            rawContent = rawContent.replace(actionRegex, '').trim();
+        }
+        // --- END ACTION PARSER ---
+
+        setMessages(prev => [...prev, { role: 'assistant', content: rawContent, timestamp: new Date() }]);
       }
     } catch (error) {
         setMessages(prev => [...prev, { role: 'assistant', content: "Maaf, koneksi AI sedang sibuk.", timestamp: new Date() }]);
@@ -81,30 +120,20 @@ export default function AIChatSidebar({ isOpen, onClose }: AIChatSidebarProps) {
   };
 
   return (
-    <motion.div 
-        initial={{ width: 0, opacity: 0 }}
-        animate={{ 
-            width: isOpen ? 400 : 0,
-            opacity: isOpen ? 1 : 0
-        }}
-        exit={{ width: 0, opacity: 0 }}
-        transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-        style={{ willChange: 'width, opacity' }}
-        className="h-full border-l border-neutral-100 bg-white flex flex-col overflow-hidden shrink-0"
-    >
-        {/* Header */}
-        <div className="px-6 py-5 border-b border-neutral-100 flex items-center justify-between shrink-0">
+    <div className="w-full h-full bg-white flex flex-col overflow-hidden shrink-0 rounded-[1.5rem] border border-neutral-100 shadow-sm">
+        {/* Header - Aligned with Dashboard Padding (80px) */}
+        <div className="h-20 px-6 border-b border-neutral-100 flex items-center justify-between shrink-0">
             <div className="flex items-center gap-3">
-                <div className="w-9 h-9 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-500">
-                    <Sparkles className="w-5 h-5" />
+                <div className="w-8 h-8 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-500">
+                    <Sparkles className="w-4 h-4" />
                 </div>
                 <div>
-                    <h2 className="text-sm font-black text-neutral-900 leading-none">SmartFinance GPT</h2>
-                    <p className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest mt-1">AI Assistant</p>
+                    <h2 className="text-[13px] font-semibold text-black leading-none">Your Command</h2>
+                    <p className="text-[8px] font-semibold text-black mt-1">Operational Assistant</p>
                 </div>
             </div>
             <button onClick={onClose} className="p-2.5 hover:bg-neutral-50 rounded-xl transition-all active:scale-90">
-                <X className="w-5 h-5 text-neutral-400" />
+                <X className="w-5 h-5 text-black" />
             </button>
         </div>
 
@@ -113,15 +142,15 @@ export default function AIChatSidebar({ isOpen, onClose }: AIChatSidebarProps) {
             {messages.map((msg, i) => (
                 <div key={i} className={cn("flex gap-3", msg.role === 'user' ? "flex-row-reverse" : "flex-row")}>
                     <div className={cn(
-                        "w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border",
+                        "w-7 h-7 rounded-xl flex items-center justify-center shrink-0 border",
                         msg.role === 'assistant' ? "bg-indigo-50 border-indigo-100 text-indigo-500" : "bg-neutral-900 border-neutral-800 text-white"
                     )}>
                         {msg.role === 'assistant' ? <Bot className="w-4 h-4" /> : <User className="w-4 h-4" />}
                     </div>
                     <div className={cn("flex flex-col gap-1", msg.role === 'user' ? "items-end" : "items-start")}>
                         <div className={cn(
-                            "px-4 py-2.5 rounded-2xl text-[12px] leading-relaxed",
-                            msg.role === 'assistant' ? "bg-neutral-50 border border-neutral-100 text-neutral-800" : "bg-neutral-900 text-white"
+                            "px-4 py-2.5 rounded-xl text-[12px] leading-relaxed",
+                            msg.role === 'assistant' ? "bg-neutral-50 border border-neutral-100 text-black font-medium" : "bg-neutral-900 text-white font-medium"
                         )}>
                             {msg.content}
                         </div>
@@ -130,7 +159,7 @@ export default function AIChatSidebar({ isOpen, onClose }: AIChatSidebarProps) {
             ))}
             {isLoading && (
                 <div className="flex gap-3">
-                    <div className="w-7 h-7 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-500 flex items-center justify-center">
+                    <div className="w-7 h-7 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-500 flex items-center justify-center">
                         <Loader2 className="w-4 h-4 animate-spin" />
                     </div>
                     <div className="bg-neutral-50 px-4 py-2 rounded-2xl flex items-center gap-1.5">
@@ -150,20 +179,20 @@ export default function AIChatSidebar({ isOpen, onClose }: AIChatSidebarProps) {
                     onChange={(e) => setInput(e.target.value)}
                     disabled={isLoading}
                     placeholder="Tanyakan keuangan..."
-                    className="w-full bg-neutral-50 border border-neutral-100 rounded-2xl pl-5 pr-12 py-3.5 text-[12px] focus:outline-none focus:border-indigo-500 transition-all font-medium"
+                    className="w-full bg-neutral-50 border border-neutral-100 rounded-xl pl-5 pr-12 py-3.5 text-[12px] focus:outline-none focus:border-indigo-500 transition-all font-medium"
                 />
                 <button 
                     type="submit"
                     disabled={!input.trim() || isLoading}
                     className={cn(
                         "absolute right-1.5 top-1.5 w-9 h-9 rounded-xl flex items-center justify-center transition-all",
-                        input.trim() ? "bg-indigo-500 text-white shadow-lg shadow-indigo-200" : "bg-neutral-100 text-neutral-300"
+                        input.trim() ? "bg-indigo-500 text-white" : "bg-neutral-100 text-neutral-300"
                     )}
                 >
                     <Send className="w-4 h-4" />
                 </button>
             </form>
         </div>
-    </motion.div>
+    </div>
   );
 }

@@ -42,20 +42,24 @@ export async function POST(req: Request) {
     const modelsToTry = await getBestModels(apiKey);
     
     // Construct System Instruction based on financial data
-    const systemInstruction = `Anda adalah "SmartFinance GPT", asisten keuangan pribadi yang sangat cerdas, detail, dan solutif.
-    Tugas Anda adalah membantu pengguna mengelola keuangan berdasarkan data riwayat transaksi mereka. 
-    Aura Anda: Profesional, bersahabat, jujur, dan analitis.
+    const systemInstruction = `Anda adalah "Your Command", Partner Finansial Eksekutif yang cerdas dan solutif.
+    Tugas Anda adalah mengelola keuangan Dyko. Anda harus luwes dalam mengobrol, tapi SANGAT TEGAS dalam menjalankan perintah database.
 
-    DATA KEUANGAN PENGGUNA SAAT INI:
+    KONTEKS DATA SAAT INI:
     ${financialContext}
 
-    ATURAN:
-    1. Jawablah berdasarkan data keuangan yang diberikan jika pengguna bertanya tentang saldo atau riwayat.
-    2. Jika pengguna bertanya hal yang tidak ada di data, berikan saran keuangan umum yang bijak.
-    3. Gunakan Bahasa Indonesia yang santai namun sopan (seperti seorang coach).
-    4. Selalu berikan motivasi atau tips penghematan jika melihat pengeluaran membengkak.
-    5. Jangan pernah memberikan saran investasi berisiko tinggi tanpa peringatan.
-    6. Jawablah secara ringkas tapi informatif (paragraf pendek).`;
+    ATURAN EMAS (WAJIB):
+    1. GAYA BAHASA: Sopan, cerdas, luwes (Natural Indonesian). Akui input user dengan antusias (e.g., "Siap, saya catat ya!").
+    2. PROTOKOL ACTION: Setiap kali Dyko mengonfirmasi transaksi (bilang "ok", "ya", "betul", dll), Anda **WAJIB** menyertakan blok [[ACTION:...]] di akhir pesan Anda. TANPA KODE INI, TRANSAKSI TIDAK AKAN TERCATAT.
+    3. FORMAT ACTION:
+       [[ACTION:{"type":"ADD_TRANSACTION", "payload":{"amount":NUMBER, "type":"income/expense", "category":"STRING", "description":"STRING", "createdAt":"ISO_STRING"}}]]
+       *PENTING: Khusus untuk 'amount', gunakan angka MENTAH (Integer). DILARANG KERAS menggunakan titik (.) atau koma (,) sebagai pemisah ribuan.*
+    4. TANGGAL: Jika Dyko menyebutkan tanggal spesifik (e.g., "5 April"), Anda WAJIB menghitung ISO String untuk tanggal tersebut (e.g., "2026-04-05T12:00:00Z"). Jika tidak ada, gunakan hari ini (2026-04-14).
+    5. KATEGORI: Gunakan salah satu dari: Gaji, Makanan & Minuman, Transportasi, Belanja, Tagihan, Freelance, Investasi, Hiburan, Lainnya.
+
+    Contoh interaksi sukses:
+    User: "ok" (setelah nego transaksi)
+    AI: "Siaapp, sudah saya catat pengeluaran 350rb untuk makanan di tanggal 5 April 2026 ya, Dyko! Saldo Anda sekarang terupdate. [[ACTION:{"type":"ADD_TRANSACTION", "payload":{"amount":350000, "type":"expense", "category":"Makanan & Minuman", "description":"Makan", "createdAt":"2026-04-05T12:00:00Z"}}]]"`;
 
     // Flatten history for Gemini format (contents: [{role, parts: [{text}]}])
     const contents = messages.map((m: any) => ({
@@ -65,8 +69,8 @@ export async function POST(req: Request) {
 
     // Insert system prompt as the beginning of the context
     const fullContents = [
-        { role: 'user', parts: [{ text: `KONTEKS SISTEM: ${systemInstruction}. Mohon dijawab sebagai SmartFinance GPT.` }] },
-        { role: 'model', parts: [{ text: "Siap! Saya adalah SmartFinance GPT. Saya sudah mempelajari data keuangan Anda. Ada yang bisa saya bantu hari ini?" }] },
+        { role: 'user', parts: [{ text: `KONTEKS SISTEM: ${systemInstruction}. Mohon hadir sebagai "Your Command".` }] },
+        { role: 'model', parts: [{ text: "Halo Dyko! Saya asisten SmartFinance Anda. Mau catat pemasukan/pengeluaran baru atau mau tanya soal budget bulan ini?" }] },
         ...contents
     ];
 

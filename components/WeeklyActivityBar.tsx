@@ -19,10 +19,10 @@ const WeeklyActivityBar: React.FC<WeeklyActivityBarProps> = ({ data }) => {
                 return (
                     <div key={index} className="space-y-1.5 group">
                         <div className="flex justify-between items-end px-0.5">
-                            <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest group-hover:text-indigo-500 transition-colors">
+                            <span className="text-[10px] font-semibold text-black group-hover:text-indigo-500 transition-colors">
                                 {item.category}
                             </span>
-                            <span className="text-[11px] font-black text-neutral-900 tracking-tight">
+                            <span className="text-[11px] font-medium text-black tracking-tight">
                                 Rp {item.amount.toLocaleString('id-ID')}
                             </span>
                         </div>
@@ -42,7 +42,7 @@ const WeeklyActivityBar: React.FC<WeeklyActivityBarProps> = ({ data }) => {
             {data.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-8 opacity-30">
                     <div className="w-12 h-1 bg-neutral-100 rounded-full mb-2" />
-                    <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest text-center">Belum ada pengeluaran minggu ini</p>
+                    <p className="text-[10px] font-semibold text-black text-center">Belum ada pengeluaran minggu ini</p>
                 </div>
             )}
         </div>

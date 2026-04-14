@@ -1,3 +1,4 @@
+@import url('https://cdn.jsdelivr.net/npm/hubot-sans@1.0.1/dist/Hubot-Sans.min.css');
 @import "tailwindcss";
 
 :root {
@@ -5,6 +6,7 @@
   --foreground: #09090b;
   --primary: #007AFF;
   --primary-foreground: #ffffff;
+  --background-alt: #f8fafc;
   --muted: #f4f4f5;
   --muted-foreground: #71717a;
   --border: #e4e4e7;
@@ -25,8 +27,9 @@
   --radius-2xl: calc(var(--radius) + 0.5rem);
   --radius-3xl: calc(var(--radius) + 1rem);
   
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Hubot Sans", ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
+  --font-montserrat: var(--font-montserrat);
 }
 
 @layer base {
@@ -48,7 +51,7 @@
     @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-sm;
   }
   .glass-card {
-    @apply bg-white/90 backdrop-blur-sm border border-neutral-100/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)];
+    @apply bg-white/90 backdrop-blur-sm border border-neutral-100/50;
   }
 }
 

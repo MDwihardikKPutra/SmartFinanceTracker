@@ -90,8 +90,8 @@ export async function POST(req: Request) {
       }
     }
 
-    return NextResponse.json({ error: "AI Insight Engine Failure", details: lastError }, { status: 500 });
+    return NextResponse.json({ error: "AI Insight Engine Failure", details: lastError });
   } catch (error: any) {
-    return NextResponse.json({ error: "System Error", details: error.message }, { status: 500 });
+    return NextResponse.json({ error: "System Error", details: error.message });
   }
 }
