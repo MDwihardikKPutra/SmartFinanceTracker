@@ -110,7 +110,7 @@ export default function LoginPage() {
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="space-y-1.5">
-                    <label className="text-[10px] font-medium text-neutral-400 ml-1 uppercase tracking-widest">Email Identity</label>
+                    <label className="text-[10px] font-bold text-neutral-400 ml-1 uppercase tracking-widest">Email Identity</label>
                     <div className="relative group/input">
                         <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-300 group-focus-within/input:text-indigo-600 transition-colors" />
                         <input 
@@ -126,7 +126,7 @@ export default function LoginPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                    <label className="text-[10px] font-medium text-neutral-400 ml-1 uppercase tracking-widest">Security Password</label>
+                    <label className="text-[10px] font-bold text-neutral-400 ml-1 uppercase tracking-widest">Security Password</label>
                     <div className="relative group/input">
                         <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-300 group-focus-within/input:text-indigo-600 transition-colors" />
                         <input 
