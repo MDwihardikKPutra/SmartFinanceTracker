@@ -204,6 +204,7 @@ export default function LoginPage() {
                     fill 
                     className="object-cover transition-transform duration-[12s] group-hover:scale-110 ease-out"
                     priority
+                    sizes="(max-width: 1024px) 100vw, 50vw"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-indigo-900/40 to-transparent pointer-events-none" />
                 <div className="absolute bottom-8 left-8 right-8">
