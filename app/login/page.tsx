@@ -118,6 +118,7 @@ export default function LoginPage() {
                             placeholder="rownok@gmail.com"
                             className="w-full bg-neutral-50/50 border border-transparent rounded-xl py-3 pl-11 pr-4 outline-none focus:bg-neutral-50 focus:border-neutral-100 transition-all text-black font-medium text-[12px]"
                             required
+                            autoComplete="email"
                         />
                     </div>
                 </div>
@@ -133,6 +134,7 @@ export default function LoginPage() {
                             placeholder="••••••••••••"
                             className="w-full bg-neutral-50/50 border border-transparent rounded-xl py-3 pl-11 pr-11 outline-none focus:bg-neutral-50 focus:border-neutral-100 transition-all text-black font-medium text-[12px]"
                             required
+                            autoComplete="current-password"
                         />
                         <button 
                             type="button"
