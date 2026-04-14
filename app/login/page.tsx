@@ -20,7 +20,7 @@ export default function LoginPage() {
     if (isDemoLoading) return;
     setIsDemoLoading(true);
     
-    const demoEmail = 'demo@smartfinance.app';
+    const demoEmail = 'warren@buffet.com';
     const demoPassword = 'demo1234';
     
     setEmail('');

@@ -56,8 +56,7 @@ export default function Navbar() {
         
         <div className="flex items-center gap-3 pl-2">
             <div className="text-right">
-                <p className="text-[11px] font-bold text-black leading-none">Dyko Putra</p>
-                <p className="text-[9px] font-semibold text-neutral-400 mt-1">Premium Identity</p>
+                <p className="text-[11px] font-bold text-black leading-none">Warren Buffet</p>
             </div>
             <div className="w-10 h-10 bg-neutral-100 rounded-full border-2 border-white overflow-hidden">
                 <div className="w-full h-full bg-neutral-200 flex items-center justify-center">

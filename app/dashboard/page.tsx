@@ -93,15 +93,37 @@ export default function DashboardPage() {
             {/* PILLAR SECTION: Activity Section (NOW ON THE LEFT - Fixed width) */}
             <div className="lg:w-[480px] shrink-0 h-full min-h-0 flex flex-col relative order-first">
                 <div className="flex flex-col gap-4 h-full">
-                    {/* Top Row: Balance */}
-                    <div className="bg-indigo-600 p-6 rounded-[1.5rem] border border-indigo-500 flex items-center justify-between group hover:scale-[1.005] transition-all duration-500 cursor-pointer overflow-hidden relative shrink-0">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-2xl transition-colors" />
-                        <div className="flex flex-col relative z-10">
-                            <p className="text-[10px] font-semibold text-white/80 mb-1">Total Balance</p>
-                            <h2 className="text-3xl font-semibold text-white tracking-tighter">{formatCurrency(balance)}</h2>
+                    {/* Top Row: Balance Card (ATM/Credit Card Style) */}
+                    <div className="bg-gradient-to-br from-indigo-600 to-indigo-800 p-7 rounded-[1.5rem] border border-indigo-400/30 flex flex-col justify-between h-[180px] group hover:scale-[1.01] transition-all duration-700 cursor-pointer overflow-hidden relative shrink-0 shadow-xl shadow-indigo-100/50">
+                        {/* Decorative Patterns */}
+                        <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full -mr-24 -mt-24 blur-3xl" />
+                        <div className="absolute bottom-0 left-0 w-32 h-32 bg-indigo-400/10 rounded-full -ml-16 -mb-16 blur-2xl" />
+                        
+                        <div className="flex justify-between items-start relative z-10">
+                            <div className="flex flex-col">
+                                <p className="text-[10px] font-bold text-white/60 tracking-widest uppercase mb-1">Total Balance</p>
+                                <h2 className="text-[28px] font-bold text-white tracking-tight flex items-baseline gap-1">
+                                    <span className="text-[16px] opacity-70">Rp</span> 
+                                    {balance.toLocaleString('id-ID')}
+                                </h2>
+                            </div>
+                            <div className="w-10 h-8 bg-gradient-to-br from-amber-300 to-amber-500 rounded-md shadow-inner relative overflow-hidden flex flex-col gap-1 p-1">
+                                <div className="w-full h-px bg-black/10" />
+                                <div className="w-full h-px bg-black/10" />
+                                <div className="w-full h-px bg-black/10" />
+                                <div className="absolute inset-0 border border-black/5 rounded-md" />
+                            </div>
                         </div>
-                        <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center border border-white/20 group-hover:bg-white group-hover:text-indigo-600 transition-all duration-300 relative z-10">
-                            <Wallet className="w-6 h-6 text-white group-hover:text-indigo-600 transition-colors" />
+
+                        <div className="flex items-end justify-between relative z-10">
+                            <div className="flex flex-col">
+                                <p className="text-[8px] font-bold text-white/40 tracking-widest uppercase mb-0.5">Card Holder</p>
+                                <p className="text-[13px] font-bold text-white tracking-widest font-montserrat uppercase">Warren Buffet</p>
+                            </div>
+                            <div className="flex items-center gap-1.5 opacity-60">
+                                <div className="w-6 h-6 rounded-full bg-white/20" />
+                                <div className="w-6 h-6 rounded-full bg-white/30 -ml-3" />
+                            </div>
                         </div>
                     </div>
 
