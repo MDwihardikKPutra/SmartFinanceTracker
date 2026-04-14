@@ -22,6 +22,10 @@ const montserrat = Montserrat({
 export const metadata: Metadata = {
   title: "SmartFinanceTracker",
   description: "Catat keuangan dengan bantuan AI",
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 export default function RootLayout({

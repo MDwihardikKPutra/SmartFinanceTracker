@@ -32,10 +32,46 @@ async function getBestModels(apiKey: string): Promise<string[]> {
   }
 }
 
+// Simple in-memory rate limiter for production stability
+const rateLimitMap = new Map<string, { count: number, lastReset: number }>();
+const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
+const MAX_REQUESTS = 15;
+
 export async function POST(req: Request) {
+  // --- RATE LIMITING ---
+  const ip = req.headers.get('x-forwarded-for') || 'anonymous';
+  const now = Date.now();
+  const userData = rateLimitMap.get(ip) || { count: 0, lastReset: now };
+
+  if (now - userData.lastReset > RATE_LIMIT_WINDOW) {
+      userData.count = 0;
+      userData.lastReset = now;
+  }
+
+  userData.count++;
+  rateLimitMap.set(ip, userData);
+
+  if (userData.count > MAX_REQUESTS) {
+      return NextResponse.json({ 
+          content: "Kecepatan akses terlalu tinggi. Mohon tunggu sebentar sebelum mengirim pesan lagi.",
+          error: "Rate limit exceeded" 
+      }, { status: 429 });
+  }
+
   try {
     const { messages, financialContext } = await req.json();
-    const apiKey = process.env.GEMINI_API_KEY;
+
+    // --- PAYLOAD VALIDATION ---
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+        return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
+    }
+
+    const lastMessage = messages[messages.length - 1].content;
+    if (lastMessage.length > 5000) {
+        return NextResponse.json({ error: "Message too long" }, { status: 400 });
+    }
+
+    const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
 
     if (!apiKey) return NextResponse.json({ error: "Missing API Key" }, { status: 500 });
 
