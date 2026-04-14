@@ -74,7 +74,7 @@ export default function AIChatSidebar({ isOpen, onClose }: AIChatSidebarProps) {
         let rawContent = data.content;
         
         // --- ACTION PARSER (RESILIENT) ---
-        const actionRegex = /\[\[ACTION:(.*?)\]\]/s;
+        const actionRegex = /\[\[ACTION:([\s\S]*?)\]\]/;
         const match = rawContent.match(actionRegex);
         
         if (match) {
@@ -98,7 +98,10 @@ export default function AIChatSidebar({ isOpen, onClose }: AIChatSidebarProps) {
                             type: finalType,
                             category: category || "Lainnya",
                             description: description || "AI Transaction",
-                            createdAt: createdAt || new Date().toISOString()
+                            status: 'paid' as const,
+                            rawInput: cleanJson,
+                            aiConfidence: 0.9,
+                            createdAt: createdAt ? new Date(createdAt) : new Date()
                         });
                         console.log("✅ SmartFinance: Transaction added with precision.", { parsedAmount, finalType, createdAt });
                     }

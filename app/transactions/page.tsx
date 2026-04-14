@@ -84,10 +84,14 @@ export default function TransactionsPage() {
     const data = {
         ...formData,
         amount: Number(formData.amount),
-        createdAt: new Date(formData.createdAt)
+        createdAt: new Date(formData.createdAt),
+        status: 'paid' as const,
+        rawInput: 'manual',
+        aiConfidence: 1
     };
 
     if (editingId) {
+        // @ts-ignore - update types in dexie can be tricky with partials
         await db.transactions.update(editingId, data);
     } else {
         await db.transactions.add(data);

@@ -161,7 +161,7 @@ const SalaryBurnChart = memo(function SalaryBurnChart() {
                                             <span className="text-[10px] font-semibold text-black">Total Balance</span>
                                         </div>
                                         <span className="text-[14px] font-semibold text-indigo-600 tracking-tight">
-                                            {formatCurrency(payload[0].value)}
+                                            {formatCurrency(Number(payload[0].value))}
                                         </span>
                                     </div>
 

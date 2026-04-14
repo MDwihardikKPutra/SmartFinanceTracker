@@ -25,8 +25,8 @@ async function getBestModels(apiKey: string): Promise<string[]> {
 
     // Dynamically identify our preferred models if they exist in the discovered list
     const preferred = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-1.5-flash-latest"];
-    const priority = preferred.filter(p => discovered.includes(p));
-    const others = discovered.filter(d => !priority.includes(d));
+    const priority = preferred.filter((p: string) => discovered.includes(p));
+    const others = discovered.filter((d: string) => !priority.includes(d));
 
     // Shuffle others to distribute load
     const shuffledOthers = others.sort(() => Math.random() - 0.5);

@@ -253,7 +253,7 @@ const CashflowChart = memo(function CashflowChart() {
                                             <span className="text-[10px] font-semibold text-black">Pemasukan</span>
                                         </div>
                                         <span className="text-[13px] font-semibold text-black tracking-tight">
-                                            {formatCurrency(incomeVal)}
+                                            {formatCurrency(Number(incomeVal))}
                                         </span>
                                     </div>
                                     <div className="flex items-center justify-between">
@@ -262,7 +262,7 @@ const CashflowChart = memo(function CashflowChart() {
                                             <span className="text-[10px] font-semibold text-black">Pengeluaran</span>
                                         </div>
                                         <span className="text-[13px] font-semibold text-red-600 tracking-tight">
-                                            {formatCurrency(expenseVal)}
+                                            {formatCurrency(Number(expenseVal))}
                                         </span>
                                     </div>
                                 </div>
