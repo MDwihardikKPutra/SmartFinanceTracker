@@ -14,14 +14,16 @@ import {
 import { cn, formatCurrency, formatDate } from '@/lib/utils';
 import { CATEGORY_CONFIG, CATEGORIES } from '@/lib/constants';
 import { db } from '@/lib/db';
+import { TransactionService } from '@/lib/services/transactionService';
+import type { Transaction, TransactionType } from '@/types';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { motion, AnimatePresence } from 'framer-motion';
-
+ 
 const MONTHS = [
     'Semua', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 
     'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
 ];
-
+ 
 export default function TransactionsPage() {
   const now = new Date();
   const [search, setSearch] = useState('');
@@ -35,15 +37,13 @@ export default function TransactionsPage() {
   const [formData, setFormData] = useState({
     description: '',
     amount: '',
-    type: 'expense' as 'income' | 'expense',
+    type: 'expense' as TransactionType,
     category: 'Makanan & Minuman',
     createdAt: new Date().toISOString().split('T')[0]
   });
-
-  const transactions = useLiveQuery(() => 
-    db.transactions.orderBy('createdAt').reverse().toArray()
-  ) || [];
-
+ 
+  const transactions = useLiveQuery(() => TransactionService.getAll()) || [];
+ 
   const filteredTransactions = transactions.filter(t => {
     const d = new Date(t.createdAt);
     const matchesSearch = (t.description || '').toLowerCase().includes(search.toLowerCase()) || 
@@ -54,7 +54,7 @@ export default function TransactionsPage() {
     
     return matchesSearch && matchesType && matchesMonth && matchesYear;
   });
-
+ 
   const openAddModal = () => {
     setEditingId(null);
     setFormData({
@@ -66,8 +66,9 @@ export default function TransactionsPage() {
     });
     setIsModalOpen(true);
   };
-
-  const openEditModal = (t: any) => {
+ 
+  const openEditModal = (t: Transaction) => {
+    if (!t.id) return;
     setEditingId(t.id);
     setFormData({
         description: t.description,
@@ -78,7 +79,7 @@ export default function TransactionsPage() {
     });
     setIsModalOpen(true);
   };
-
+ 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     const data = {
@@ -89,19 +90,18 @@ export default function TransactionsPage() {
         rawInput: 'manual',
         aiConfidence: 1
     };
-
+ 
     if (editingId) {
-        // @ts-ignore - update types in dexie can be tricky with partials
-        await db.transactions.update(editingId, data);
+        await TransactionService.update(editingId, data);
     } else {
-        await db.transactions.add(data);
+        await TransactionService.create(data);
     }
     setIsModalOpen(false);
   };
-
+ 
   const handleDelete = async () => {
     if (editingId && window.confirm("Hapus transaksi ini?")) {
-        await db.transactions.delete(editingId);
+        await TransactionService.remove(editingId);
         setIsModalOpen(false);
     }
   };

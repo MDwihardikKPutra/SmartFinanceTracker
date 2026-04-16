@@ -1,23 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie';
-
-export interface Transaction {
-  id?: number;
-  amount: number;
-  type: 'income' | 'expense';
-  category: string;
-  description: string;
-  status: 'paid' | 'pending' | 'canceled';
-  rawInput: string;
-  aiConfidence: number;
-  createdAt: Date;
-}
-
-export interface Profile {
-  id: number;
-  targetSavings: number;
-  targetDate: Date;
-  currency: string;
-}
+import type { Transaction, Profile } from '@/types';
 
 const db = new Dexie('SmartFinanceDB') as Dexie & {
   transactions: EntityTable<Transaction, 'id'>;

@@ -1,19 +1,10 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Sparkles, X, Loader2, Bot, User, Trash2 } from 'lucide-react';
-import { db } from '@/lib/db';
-import { useLiveQuery } from 'dexie-react-hooks';
+import { Send, Sparkles, X, Loader2, Bot, User, Camera, Image as ImageIcon, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
-import { id } from 'date-fns/locale';
-
-interface Message {
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: Date;
-}
+import { useChatLogic } from '@/hooks/useChatLogic';
 
 interface AIChatSidebarProps {
     isOpen: boolean;
@@ -21,118 +12,32 @@ interface AIChatSidebarProps {
 }
 
 export default function AIChatSidebar({ isOpen, onClose }: AIChatSidebarProps) {
-  const [messages, setMessages] = useState<Message[]>([
-    { 
-        role: 'assistant', 
-        content: "Halo Dyko! Saya siap bantu kelola keuanganmu hari ini. Mau catat transaksi baru atau ada yang mau ditanyakan soal budgetmu?", 
-        timestamp: new Date() 
-    }
-  ]);
-  const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  const transactions = useLiveQuery(() => db.transactions.toArray()) || [];
-  
-  const financialContext = useMemo(() => {
-    const income = transactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-    const expense = transactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
-    const recent = transactions.slice(-15).map(t => 
-        `- ${format(new Date(t.createdAt), 'dd/MM')}: ${t.type} Rp ${t.amount.toLocaleString()} (${t.category})`
-    ).join('\n');
-
-    return `Saldo: Rp ${(income - expense).toLocaleString()}. Transaksi Terakhir:\n${recent}`;
-  }, [transactions]);
-
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages, isOpen]);
-
-  const handleSend = async (e?: React.FormEvent) => {
-    e?.preventDefault();
-    if (!input.trim() || isLoading) return;
-
-    const userMessage: Message = { role: 'user', content: input, timestamp: new Date() };
-    setMessages(prev => [...prev, userMessage]);
-    setInput('');
-    setIsLoading(true);
-
-    try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-            messages: [...messages, userMessage].map(m => ({ role: m.role, content: m.content })),
-            financialContext 
-        }),
-      });
-
-      const data = await response.json();
-      if (response.ok) {
-        let rawContent = data.content;
-        
-        // --- ACTION PARSER (RESILIENT) ---
-        const actionRegex = /\[\[ACTION:([\s\S]*?)\]\]/;
-        const match = rawContent.match(actionRegex);
-        
-        if (match) {
-            try {
-                const cleanJson = match[1].replace(/```json|```/g, '').trim();
-                const actionData = JSON.parse(cleanJson);
-                
-                if (actionData.type === 'ADD_TRANSACTION') {
-                    const { amount, type, category, description, createdAt } = actionData.payload;
-                    
-                    // Sanitize amount: remove dots, commas, or currencies that might cause parsing failure
-                    const cleanAmount = String(amount).replace(/[.,]/g, '').replace(/[^0-9]/g, '');
-                    const parsedAmount = Number(cleanAmount);
-                    
-                    const validTypes = ['income', 'expense'];
-                    const finalType = validTypes.includes(type) ? type : 'expense';
-
-                    if (!isNaN(parsedAmount) && parsedAmount > 0) {
-                        await db.transactions.add({
-                            amount: parsedAmount,
-                            type: finalType,
-                            category: category || "Lainnya",
-                            description: description || "AI Transaction",
-                            status: 'paid' as const,
-                            rawInput: cleanJson,
-                            aiConfidence: 0.9,
-                            createdAt: createdAt ? new Date(createdAt) : new Date()
-                        });
-                        console.log("✅ SmartFinance: Transaction added with precision.", { parsedAmount, finalType, createdAt });
-                    }
-                }
-            } catch (err) {
-                console.error("❌ SmartFinance: Action Parse Error:", err);
-            }
-            rawContent = rawContent.replace(actionRegex, '').trim();
-        }
-        // --- END ACTION PARSER ---
-
-        setMessages(prev => [...prev, { role: 'assistant', content: rawContent, timestamp: new Date() }]);
-      }
-    } catch (error) {
-        setMessages(prev => [...prev, { role: 'assistant', content: "Maaf, koneksi AI sedang sibuk.", timestamp: new Date() }]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const {
+    messages,
+    input,
+    setInput,
+    isLoading,
+    selectedImage,
+    setSelectedImage,
+    pendingTxn,
+    scrollRef,
+    fileInputRef,
+    handleFileSelect,
+    handleSend,
+    formatCurrency
+  } = useChatLogic(isOpen);
 
   return (
-    <div className="w-full h-full bg-white flex flex-col overflow-hidden shrink-0 rounded-[1.5rem] border border-neutral-100 shadow-sm">
-        {/* Header - Aligned with Dashboard Padding (80px) */}
+    <div className="w-full h-full bg-white flex flex-col overflow-hidden shrink-0 rounded-[1.5rem] border border-neutral-100 shadow-sm relative">
+        {/* Header */}
         <div className="h-20 px-6 border-b border-neutral-100 flex items-center justify-between shrink-0">
             <div className="flex items-center gap-3">
                 <div className="w-8 h-8 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-500">
                     <Sparkles className="w-4 h-4" />
                 </div>
                 <div>
-                    <h2 className="text-[13px] font-semibold text-black leading-none">Your Command</h2>
-                    <p className="text-[8px] font-semibold text-black mt-1">Operational Assistant</p>
+                    <h2 className="text-[13px] font-bold text-black leading-none uppercase tracking-widest">AI COMMANDER</h2>
+                    <p className="text-[8px] font-bold text-black/40 mt-1 uppercase tracking-tighter">Operational Intelligence</p>
                 </div>
             </div>
             <button onClick={onClose} className="p-2.5 hover:bg-neutral-50 rounded-xl transition-all active:scale-90">
@@ -145,15 +50,15 @@ export default function AIChatSidebar({ isOpen, onClose }: AIChatSidebarProps) {
             {messages.map((msg, i) => (
                 <div key={i} className={cn("flex gap-3", msg.role === 'user' ? "flex-row-reverse" : "flex-row")}>
                     <div className={cn(
-                        "w-7 h-7 rounded-xl flex items-center justify-center shrink-0 border",
-                        msg.role === 'assistant' ? "bg-indigo-50 border-indigo-100 text-indigo-500" : "bg-neutral-900 border-neutral-800 text-white"
+                        "w-7 h-7 rounded-xl flex items-center justify-center shrink-0 border shadow-sm",
+                        msg.role === 'assistant' ? "bg-white border-neutral-100 text-indigo-500" : "bg-black border-black text-white"
                     )}>
                         {msg.role === 'assistant' ? <Bot className="w-4 h-4" /> : <User className="w-4 h-4" />}
                     </div>
-                    <div className={cn("flex flex-col gap-1", msg.role === 'user' ? "items-end" : "items-start")}>
+                    <div className={cn("flex flex-col gap-1 max-w-[85%]", msg.role === 'user' ? "items-end" : "items-start")}>
                         <div className={cn(
-                            "px-4 py-2.5 rounded-xl text-[12px] leading-relaxed",
-                            msg.role === 'assistant' ? "bg-neutral-50 border border-neutral-100 text-black font-medium" : "bg-neutral-900 text-white font-medium"
+                            "px-4 py-2.5 rounded-[1.25rem] text-[12px] leading-relaxed shadow-sm whitespace-pre-line",
+                            msg.role === 'assistant' ? "bg-neutral-50 border border-neutral-100 text-black font-medium" : "bg-black text-white font-bold"
                         )}>
                             {msg.content}
                         </div>
@@ -162,34 +67,76 @@ export default function AIChatSidebar({ isOpen, onClose }: AIChatSidebarProps) {
             ))}
             {isLoading && (
                 <div className="flex gap-3">
-                    <div className="w-7 h-7 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-500 flex items-center justify-center">
+                    <div className="w-7 h-7 rounded-xl bg-white border border-neutral-100 text-indigo-500 flex items-center justify-center shadow-sm">
                         <Loader2 className="w-4 h-4 animate-spin" />
                     </div>
-                    <div className="bg-neutral-50 px-4 py-2 rounded-2xl flex items-center gap-1.5">
-                        <span className="w-1 h-1 bg-indigo-400 rounded-full animate-bounce" />
-                        <span className="w-1 h-1 bg-indigo-400 rounded-full animate-bounce [animation-delay:0.2s]" />
+                    <div className="bg-neutral-50 px-4 py-2.5 rounded-2xl flex items-center gap-1.5 shadow-sm">
+                        <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce" />
+                        <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce [animation-delay:0.2s]" />
                     </div>
                 </div>
             )}
         </div>
 
+        {/* Pending Transaction Indicator */}
+        <AnimatePresence>
+            {pendingTxn && (
+                <motion.div 
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="overflow-hidden border-t border-amber-100"
+                >
+                    <div className="px-6 py-2.5 bg-amber-50/80 flex items-center gap-2">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-amber-600" />
+                        <span className="text-[10px] font-bold text-amber-700 uppercase tracking-widest">Menunggu Konfirmasi</span>
+                        <span className="text-[10px] text-amber-600 ml-auto font-mono">{formatCurrency(pendingTxn.amount)}</span>
+                    </div>
+                </motion.div>
+            )}
+        </AnimatePresence>
+
         {/* Input Area */}
         <div className="p-5 border-t border-neutral-50 bg-white">
-            <form onSubmit={handleSend} className="relative group">
-                <input 
-                    type="text"
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    disabled={isLoading}
-                    placeholder="Tanyakan keuangan..."
-                    className="w-full bg-neutral-50 border border-neutral-100 rounded-xl pl-5 pr-12 py-3.5 text-[12px] focus:outline-none focus:border-indigo-500 transition-all font-medium"
-                />
+            {selectedImage && (
+                <div className="mb-3 p-2 bg-neutral-50 rounded-xl border border-neutral-100 flex items-center justify-between">
+                    <div className="flex items-center gap-2 min-w-0">
+                        <ImageIcon className="w-4 h-4 text-emerald-600" />
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-black/60 truncate">Nota Siap Diproses</span>
+                    </div>
+                    <button onClick={() => { setSelectedImage(null); if (fileInputRef.current) fileInputRef.current.value = ''; }} className="p-1 hover:bg-neutral-200 rounded-full">
+                        <X className="w-3.5 h-3.5" />
+                    </button>
+                </div>
+            )}
+            <form onSubmit={handleSend} className="relative flex items-center gap-2">
+                <div className="relative flex-1 group">
+                    <input 
+                        type="text"
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        disabled={isLoading}
+                        placeholder={pendingTxn ? 'Ketik "oke" untuk simpan...' : selectedImage ? "Kirim nota..." : "Tanyakan keuangan..."}
+                        className="w-full bg-neutral-50 border border-neutral-100 rounded-xl pl-5 pr-12 py-3.5 text-[12px] focus:outline-none focus:border-black transition-all font-bold placeholder:text-neutral-400"
+                    />
+                    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                        <input type="file" ref={fileInputRef} onChange={handleFileSelect} accept="image/*" className="hidden" />
+                        <button 
+                            type="button" 
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={isLoading}
+                            className={cn("p-1.5 rounded-lg transition-all", selectedImage ? "text-emerald-600 bg-emerald-50" : "text-black/30 hover:text-black")}
+                        >
+                            <Camera className="w-4 h-4" />
+                        </button>
+                    </div>
+                </div>
                 <button 
                     type="submit"
-                    disabled={!input.trim() || isLoading}
+                    disabled={(!input.trim() && !selectedImage) || isLoading}
                     className={cn(
-                        "absolute right-1.5 top-1.5 w-9 h-9 rounded-xl flex items-center justify-center transition-all",
-                        input.trim() ? "bg-indigo-500 text-white" : "bg-neutral-100 text-neutral-300"
+                        "w-11 h-11 rounded-xl flex items-center justify-center transition-all shadow-lg shadow-neutral-100",
+                        (input.trim() || selectedImage) ? "bg-black text-white" : "bg-neutral-100 text-neutral-300"
                     )}
                 >
                     <Send className="w-4 h-4" />

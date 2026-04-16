@@ -1,5 +1,6 @@
-import { db } from './db';
+import { TransactionService } from '@/lib/services/transactionService';
 import { setMonth, startOfMonth, addDays, format } from 'date-fns';
+import type { Transaction, TransactionType } from '@/types';
 
 const REALISTIC_DESCRIPTIONS = {
     'Makanan & Minuman': [
@@ -39,9 +40,9 @@ function getRandom(arr: string[]) {
 }
 
 export async function seedDummyData() {
-  await db.transactions.clear();
+  await TransactionService.clearAll();
 
-  const dummyTransactions: any[] = [];
+  const dummyTransactions: Omit<Transaction, 'id'>[] = [];
   
   // Generate data for the full year (Jan to Dec)
   for (let month = 0; month < 12; month++) {
@@ -56,6 +57,9 @@ export async function seedDummyData() {
         amount: monthlySalary,
         category: 'Gaji',
         type: 'income',
+        status: 'paid',
+        rawInput: 'seeded',
+        aiConfidence: 1,
         createdAt: addDays(monthDate, 0),
     });
 
@@ -64,6 +68,9 @@ export async function seedDummyData() {
         amount: dividend,
         category: 'Freelance',
         type: 'income',
+        status: 'paid',
+        rawInput: 'seeded',
+        aiConfidence: 1,
         createdAt: addDays(monthDate, 14),
     });
 
@@ -86,6 +93,9 @@ export async function seedDummyData() {
                 amount: amount,
                 category: category,
                 type: 'expense',
+                status: 'paid',
+                rawInput: 'seeded',
+                aiConfidence: 1,
                 createdAt: date,
             });
         }
@@ -97,12 +107,15 @@ export async function seedDummyData() {
                 amount: 5000000 + Math.floor(Math.random() * 10000000),
                 category: 'Tagihan',
                 type: 'expense',
+                status: 'paid',
+                rawInput: 'seeded',
+                aiConfidence: 1,
                 createdAt: date,
             });
         }
     }
   }
 
-  await db.transactions.bulkAdd(dummyTransactions);
-  console.log('Buffet Tier Data Seeding Success');
+  await TransactionService.bulkCreate(dummyTransactions);
+  console.log('Buffet Tier Data Seeding Success via Service Layer');
 }

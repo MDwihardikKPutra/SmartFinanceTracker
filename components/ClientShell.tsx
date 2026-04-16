@@ -39,12 +39,12 @@ function ShellContent({ children }: { children: React.ReactNode }) {
             style={{ willChange: 'grid-template-columns' }}
             className="grid lg:grid h-full w-full overflow-hidden"
         >
-            {/* MAIN CONTENT AREA: Resizes automatically on desktop, full-width on mobile */}
+            {/* MAIN CONTENT AREA */}
             <main className="h-full w-full px-4 md:px-10 lg:px-12 pb-8 overflow-hidden min-w-0">
                 {children}
             </main>
 
-            {/* GLOBAL AI SIDEBAR AREA: Fixed Overlay on Mobile, Integrated Column on Desktop */}
+            {/* GLOBAL AI SIDEBAR AREA */}
             <AnimatePresence>
                 {isChatOpen && (
                     <motion.div 

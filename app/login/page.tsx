@@ -162,9 +162,8 @@ export default function LoginPage() {
                              </div>
                              <button type="button" className="text-[10px] sm:text-[11px] font-bold text-black hover:underline tracking-tight whitespace-nowrap">Forgot Key?</button>
                          </div>
-                 </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+ 
+                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
                             <button
                                 type="submit"
                                 disabled={isDemoLoading || isLoading}

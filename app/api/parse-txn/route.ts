@@ -41,16 +41,15 @@ async function getBestModels(apiKey: string): Promise<string[]> {
 
 export async function POST(req: Request) {
   try {
-    const { input } = await req.json();
+    const { input, image, mimeType } = await req.json();
     const apiKey = process.env.GEMINI_API_KEY;
-
+ 
     if (!apiKey) {
       return NextResponse.json({ error: "Missing API Key" }, { status: 500 });
     }
-
+ 
     const modelsToTry = await getBestModels(apiKey);
-    console.log("Dynamic AI: Testing models for transaction parsing", modelsToTry);
-
+    
     const responseSchema = {
       type: "object",
       properties: {
@@ -62,11 +61,40 @@ export async function POST(req: Request) {
       },
       required: ["amount", "type", "category", "description", "confidence"]
     };
-
+ 
+    const categoryList = "Gaji, Freelance, Transfer Masuk, Makanan & Minuman, Transportasi, Tempat Tinggal, Belanja, Kesehatan, Hiburan, Tagihan, Pendidikan, Lainnya";
+ 
+    const prompt = image 
+        ? `Analyze this receipt/invoice image. Extract: total amount (integer, no decimals), type (income or expense), category, and description.
+RULES:
+- type must be "expense" for any purchase/payment receipt. Only use "income" for salary slips or incoming transfers.
+- category MUST be one of: ${categoryList}
+- For restaurant/cafe/food receipts, category MUST be "Makanan & Minuman"
+- For grab/gojek/taxi, category MUST be "Transportasi"
+- For shopping/store receipts, category MUST be "Belanja"
+- amount must be the final total as an integer (e.g. 150000, not 150.000)
+- description should be brief, e.g. "Makan di [nama restoran]"`
+        : `Extract financial transaction from this text. Language: Indonesian or English.
+RULES:
+- type must be "income" or "expense"
+- category MUST be one of: ${categoryList}
+- For food/eating related text, category MUST be "Makanan & Minuman"
+- amount must be an integer (e.g. 25000 not 25rb)
+Text: "${input}"`;
+ 
+    const parts: any[] = [{ text: prompt }];
+    
+    if (image) {
+        parts.push({
+            inline_data: {
+                mime_type: mimeType || "image/jpeg",
+                data: image // Assuming base64 string without prefix
+            }
+        });
+    }
+ 
     const requestBody = {
-      contents: [{
-        parts: [{ text: `Extract financial transaction from text. Language: Indonesian or English. Text: "${input}"` }]
-      }],
+      contents: [{ parts }],
       generationConfig: {
         temperature: 0.1,
         maxOutputTokens: 512,

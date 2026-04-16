@@ -4,7 +4,7 @@ import React from 'react';
 import { Area, AreaChart, ResponsiveContainer } from 'recharts';
 
 interface MiniSparklineProps {
-    data: any[];
+    data: Record<string, number | string>[];
     color: string;
 }
 

@@ -2,14 +2,14 @@
 
 import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import { db } from '@/lib/db';
 import { useLiveQuery } from 'dexie-react-hooks';
+import { TransactionService } from '@/lib/services/transactionService';
 import { isSameMonth } from 'date-fns';
 
 const COLORS = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
 
 export default function SpendingComposition() {
-  const transactions = useLiveQuery(() => db.transactions.toArray()) || [];
+  const transactions = useLiveQuery(() => TransactionService.getAll()) || [];
   
   const data = React.useMemo(() => {
     const now = new Date();

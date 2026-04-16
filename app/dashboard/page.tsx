@@ -13,13 +13,14 @@ import CashflowChart from '@/components/CashflowChart';
 import SalaryBurnChart from '@/components/SalaryBurnChart';
 import BudgetHealthGauge from '@/components/BudgetHealthGauge';
 import WeeklyActivityBar from '@/components/WeeklyActivityBar';
-import { db } from '@/lib/db';
+import { TransactionService } from '@/lib/services/transactionService';
+import type { Transaction } from '@/types';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { isSameMonth, subDays } from 'date-fns';
 import { seedDummyData } from '@/lib/seedData';
 
 export default function DashboardPage() {
-  const transactions = useLiveQuery(() => db.transactions.orderBy('createdAt').reverse().toArray()) || [];
+  const transactions = useLiveQuery(() => TransactionService.getAll()) || [];
 
   useEffect(() => {
     seedDummyData();
@@ -52,7 +53,7 @@ export default function DashboardPage() {
   }, [transactions]);
 
   // AI Insight State
-  const [aiInsight, setAiInsight] = useState<{title: string, desc: string, type: 'info' | 'success' | 'danger' | 'warning', icon: any} | null>(null);
+  const [aiInsight, setAiInsight] = useState<{title: string, desc: string, type: 'info' | 'success' | 'danger' | 'warning', icon: React.ElementType} | null>(null);
   const [isLoadingInsight, setIsLoadingInsight] = useState(false);
 
   useEffect(() => {

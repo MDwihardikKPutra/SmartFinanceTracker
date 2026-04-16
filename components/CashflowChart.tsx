@@ -14,7 +14,8 @@ import {
 } from 'recharts';
 import { TrendingUp, TrendingDown, Info, MoreHorizontal, BarChart2, Sparkles, Star, Activity, Calculator, Wallet } from 'lucide-react';
 import { cn, formatCurrency } from '@/lib/utils';
-import { db } from '@/lib/db';
+import { TransactionService } from '@/lib/services/transactionService';
+import type { Transaction } from '@/types';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { 
     format, 
@@ -42,7 +43,7 @@ const CashflowChart = memo(function CashflowChart() {
   const [activePeriod, setActivePeriod] = useState<string>('');
   const { isChatOpen, toggleChat } = useChat();
 
-  const transactions = useLiveQuery(() => db.transactions.toArray()) || [];
+  const transactions = useLiveQuery(() => TransactionService.getAll()) || [];
 
   const chartData = useMemo(() => {
     // Lock to Day-by-Day view of the selected month

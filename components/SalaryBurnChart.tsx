@@ -10,7 +10,8 @@ import {
   Tooltip, 
   ResponsiveContainer
 } from 'recharts';
-import { db } from '@/lib/db';
+import { TransactionService } from '@/lib/services/transactionService';
+import type { Transaction } from '@/types';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { 
     eachDayOfInterval,
@@ -30,7 +31,7 @@ import { Wallet, TrendingDown, Sparkles } from 'lucide-react';
 import { cn, formatCurrency } from '@/lib/utils';
 
 const SalaryBurnChart = memo(function SalaryBurnChart() {
-  const transactions = useLiveQuery(() => db.transactions.toArray()) || [];
+  const transactions = useLiveQuery(() => TransactionService.getAll()) || [];
   const now = new Date();
 
   const burnData = useMemo(() => {
