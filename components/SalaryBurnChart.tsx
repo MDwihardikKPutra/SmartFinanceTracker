@@ -127,6 +127,7 @@ const SalaryBurnChart = memo(function SalaryBurnChart() {
                         
                         // Adaptive Flip Logic: if Y is deep (bottom), shift tooltip UP
                         const isBottom = coordinate.y > 150; 
+                        const isRight = coordinate.x > 250; 
 
                         // Monthly details for Tooltip - Limited to 3
                         const detailsIncome = transactions.filter(t => {
@@ -140,7 +141,8 @@ const SalaryBurnChart = memo(function SalaryBurnChart() {
                             <div 
                                 className={cn(
                                     "bg-white/95 backdrop-blur-md border border-neutral-100 p-4 rounded-[1.25rem] flex flex-col gap-3 min-w-[280px] z-50 shadow-xl transition-transform duration-200",
-                                    isBottom ? "-translate-y-[105%]" : "translate-y-4"
+                                    isBottom ? "-translate-y-[105%]" : "translate-y-4",
+                                    isRight ? "-translate-x-[105%]" : "translate-x-4"
                                 )}
                             >
                                 {/* Header Section */}

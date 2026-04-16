@@ -1,4 +1,5 @@
-import { db, type Transaction } from './db';
+import { TransactionService } from './services/transactionService';
+import type { Transaction } from '@/types';
 import { subDays } from 'date-fns';
 
 const categories = {
@@ -6,7 +7,7 @@ const categories = {
   expense: ['Makanan & Minuman', 'Transportasi', 'Tempat Tinggal', 'Belanja', 'Kesehatan', 'Hiburan', 'Tagihan']
 };
 
-export const curatedDemoTransactions: Transaction[] = [
+export const curatedDemoTransactions: Omit<Transaction, 'id'>[] = [
   {
     amount: 12000000,
     type: 'income',
@@ -80,13 +81,15 @@ export const curatedDemoTransactions: Transaction[] = [
 ];
 
 export async function seedDemoData() {
-  const count = await db.transactions.count();
+  const allTxns = await TransactionService.getAll();
+  const count = allTxns.length;
+
   if (count === 0) {
     const now = new Date();
-    const additionalData: Transaction[] = [];
+    const additionalData: Omit<Transaction, 'id'>[] = [];
     
     // Add curated data
-    await db.transactions.bulkAdd(curatedDemoTransactions);
+    await TransactionService.bulkCreate(curatedDemoTransactions);
     
     // Generate remaining to reach 30
     for (let i = curatedDemoTransactions.length; i < 30; i++) {
@@ -109,17 +112,9 @@ export async function seedDemoData() {
       });
     }
     
-    await db.transactions.bulkAdd(additionalData);
+    await TransactionService.bulkCreate(additionalData);
     
-    // Seed profile if empty
-    const profileCount = await db.profile.count();
-    if (profileCount === 0) {
-      await db.profile.put({
-        id: 1,
-        targetSavings: 10000000,
-        targetDate: new Date('2026-03-31'),
-        currency: 'IDR'
-      });
-    }
+    // Note: Profile seeding should ideally be handled by its own Service
+    // For now keeping it simple or moving to Service if exists.
   }
 }
