@@ -17,14 +17,14 @@ export const TransactionService = {
    * Add a new transaction
    */
   async create(data: Omit<Transaction, 'id'>): Promise<number> {
-    return await db.transactions.add(data as Transaction);
+    return await db.transactions.add(data as Transaction) as number;
   },
 
   /**
    * Update an existing transaction safely
    */
   async update(id: number, data: Partial<Omit<Transaction, 'id'>>): Promise<number> {
-    return await db.transactions.update(id, data);
+    return await db.transactions.update(id, data) as number;
   },
 
   /**
