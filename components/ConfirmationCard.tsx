@@ -52,13 +52,13 @@ export default function ConfirmationCard({ data, onClose, onSaved }: Confirmatio
         transition={{ type: "spring", damping: 30, stiffness: 400 }}
         className="w-full max-w-xl bg-white rounded-[2rem] border border-neutral-200 shadow-sm overflow-hidden relative max-h-[90vh] flex flex-col"
       >
-        <div className="p-8 md:p-10 overflow-y-auto custom-scrollbar">
-          <div className="flex items-center justify-between mb-10">
+        <div className="p-6 sm:p-10 overflow-y-auto custom-scrollbar">
+          <div className="flex items-center justify-between mb-8 sm:mb-10">
             <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-neutral-50 border border-neutral-100 rounded-xl flex items-center justify-center">
-                    <Sparkles className="w-5 h-5 text-neutral-900" />
+                <div className="w-9 h-9 sm:w-10 sm:h-10 bg-neutral-50 border border-neutral-100 rounded-xl flex items-center justify-center">
+                    <Sparkles className="w-4 h-4 sm:w-5 h-5 text-neutral-900" />
                 </div>
-                <h3 className="text-2xl font-medium text-neutral-900 tracking-tight">Konfirmasi Transaksi</h3>
+                <h3 className="text-xl sm:text-2xl font-bold text-neutral-900 tracking-tight whitespace-nowrap">Konfirmasi</h3>
             </div>
             <button onClick={onClose} className="p-2 hover:bg-neutral-50 rounded-full transition-colors border border-transparent hover:border-neutral-100">
               <X className="w-6 h-6 text-neutral-400" />
@@ -66,45 +66,45 @@ export default function ConfirmationCard({ data, onClose, onSaved }: Confirmatio
           </div>
  
           {isLowConfidence && (
-            <div className="mb-8 p-6 bg-amber-50 border border-amber-100 rounded-2xl flex gap-4 text-amber-700">
-              <AlertCircle className="w-6 h-6 flex-shrink-0" />
+            <div className="mb-6 sm:mb-8 p-4 sm:p-6 bg-amber-50 border border-amber-100 rounded-2xl flex gap-3 sm:gap-4 text-amber-700">
+              <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" />
               <div className="text-sm">
-                <p className="font-semibold uppercase tracking-widest text-[10px] mb-1">Perhatian</p>
-                <p className="font-medium leading-relaxed">AI kurang yakin dengan data ini. Mohon periksa kembali.</p>
+                <p className="font-bold uppercase tracking-widest text-[9px] mb-1 whitespace-nowrap">Perhatian</p>
+                <p className="font-semibold leading-relaxed text-[11px] sm:text-sm">AI kurang yakin dengan data ini. Mohon periksa kembali.</p>
               </div>
             </div>
           )}
  
-          <div className="space-y-8">
+          <div className="space-y-6 sm:space-y-8">
             {/* Amount & Type */}
-            <div className="flex flex-col md:flex-row gap-8">
+            <div className="flex flex-col md:flex-row gap-6 sm:gap-8">
               <div className="flex-1 space-y-3">
-                <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-widest ml-1">Nominal</label>
+                <label className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest ml-1 whitespace-nowrap">Nominal Transaksi</label>
                 <div className="relative group">
-                  <span className="absolute left-5 top-1/2 -translate-y-1/2 font-medium text-neutral-400 text-lg">Rp</span>
+                  <span className="absolute left-5 top-1/2 -translate-y-1/2 font-bold text-neutral-400 text-lg">Rp</span>
                   <input 
                     type="number"
                     value={formData.amount}
                     onChange={(e) => setFormData({...formData, amount: parseInt(e.target.value) || 0})}
-                    className="w-full bg-neutral-50 border border-neutral-100 rounded-2xl py-5 pl-14 pr-4 text-3xl font-medium text-neutral-900 outline-none focus:bg-white focus:border-neutral-900 transition-all"
+                    className="w-full bg-neutral-50 border border-neutral-100 rounded-2xl py-4 sm:py-5 pl-14 pr-4 text-xl sm:text-3xl font-bold text-neutral-900 outline-none focus:bg-white focus:border-neutral-900 transition-all"
                   />
                 </div>
               </div>
               <div className="space-y-3">
-                <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-widest ml-1">Jenis</label>
-                <div className="flex bg-neutral-50 border border-neutral-100 p-1.5 rounded-2xl">
+                <label className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest ml-1 whitespace-nowrap">Jenis</label>
+                <div className="flex bg-neutral-50 border border-neutral-100 p-1 rounded-2xl">
                   <button 
                     onClick={() => setFormData({...formData, type: 'income'})}
                     className={cn(
-                        "px-8 py-3 rounded-xl text-xs font-semibold uppercase tracking-widest transition-all",
-                        formData.type === 'income' ? "bg-white border border-neutral-200 text-neutral-900" : "text-neutral-400"
+                        "px-6 sm:px-8 py-2.5 sm:py-3 rounded-xl text-[10px] sm:text-xs font-bold uppercase tracking-widest transition-all whitespace-nowrap",
+                        formData.type === 'income' ? "bg-white border border-neutral-200 text-neutral-900 shadow-sm" : "text-neutral-400"
                     )}
                   >Masuk</button>
                   <button 
                     onClick={() => setFormData({...formData, type: 'expense'})}
                     className={cn(
-                        "px-8 py-3 rounded-xl text-xs font-semibold uppercase tracking-widest transition-all",
-                        formData.type === 'expense' ? "bg-white border border-neutral-200 text-neutral-900" : "text-neutral-400"
+                        "px-6 sm:px-8 py-2.5 sm:py-3 rounded-xl text-[10px] sm:text-xs font-bold uppercase tracking-widest transition-all whitespace-nowrap",
+                        formData.type === 'expense' ? "bg-white border border-neutral-200 text-neutral-900 shadow-sm" : "text-neutral-400"
                     )}
                   >Keluar</button>
                 </div>

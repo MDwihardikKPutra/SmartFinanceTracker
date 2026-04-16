@@ -110,28 +110,27 @@ export default function TransactionsPage() {
     <div className="w-full h-full flex flex-col animate-in fade-in duration-700 pt-3 pb-6 overflow-hidden relative">
       <div className="flex-1 min-h-0 bg-white p-6 rounded-[1.5rem] border border-neutral-100 flex flex-col overflow-hidden relative">
         
-        <div className="flex items-start justify-between mb-8 ml-1">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-start justify-between gap-4 mb-8 ml-1">
             <div className="flex flex-col">
-                <h1 className="text-2xl font-semibold text-black tracking-tight leading-none mb-2">Riwayat Transaksi</h1>
-                <p className="text-black/50 text-[11px] font-medium tracking-tight">Monitoring dan manajemen seluruh aliran dana operasional.</p>
+                <h1 className="text-xl sm:text-2xl font-semibold text-black tracking-tight leading-none mb-2">Riwayat Transaksi</h1>
+                <p className="text-black/50 text-[10px] sm:text-[11px] font-medium tracking-tight">Monitoring dan manajemen seluruh aliran dana operasional.</p>
             </div>
-            <button onClick={openAddModal} className="flex items-center gap-2 px-5 py-2.5 bg-black text-white rounded-xl text-[11px] font-bold tracking-tight hover:scale-[1.02] active:scale-95 transition-all">
+            <button onClick={openAddModal} className="flex items-center justify-center gap-2 px-5 py-3 sm:py-2.5 bg-black text-white rounded-xl text-[11px] font-bold tracking-tight hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-neutral-100">
                 <Plus className="w-4 h-4" />
                 Tambah Transaksi
             </button>
         </div>
-        
-        {/* Executive Command Bar - Unified & Symmetrical */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-8 shrink-0">
-            <div className="flex items-center bg-neutral-50 border border-neutral-100 rounded-xl h-11 overflow-hidden">
-                {/* Type Toggles */}
-                <div className="flex items-center h-full px-1">
+        {/* Executive Command Bar - Compact & Non-Wrapping */}
+        <div className="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-4 mb-6 shrink-0 ml-1">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center bg-neutral-50 border border-neutral-100 rounded-xl overflow-hidden divide-y sm:divide-y-0 sm:divide-x divide-neutral-100">
+                {/* Type Toggles - Scrollable */}
+                <div className="flex items-center h-10 px-1 shrink-0 overflow-x-auto hide-scrollbar">
                     {(['all', 'income', 'expense'] as const).map((mode) => (
                         <button 
                             key={mode} 
                             onClick={() => setTypeFilter(mode)} 
                             className={cn(
-                                "h-9 px-4 rounded-lg text-[11px] font-bold transition-all", 
+                                "h-8 px-4 rounded-lg text-[10px] font-bold transition-all whitespace-nowrap uppercase tracking-widest", 
                                 typeFilter === mode 
                                     ? "bg-white text-black border border-neutral-100 shadow-sm" 
                                     : "text-black/40 hover:text-black/60"
@@ -142,46 +141,44 @@ export default function TransactionsPage() {
                     ))}
                 </div>
 
-                <div className="w-px h-6 bg-neutral-200 ml-1" />
-
                 {/* Date Selection */}
-                <div className="flex items-center h-full px-2">
+                <div className="flex items-center h-10 px-2 min-w-0">
                     <select 
                         value={filterMonth} 
                         onChange={(e) => setFilterMonth(e.target.value)}
-                        className="bg-transparent text-[11px] font-bold text-black px-3 h-full outline-none cursor-pointer hover:text-indigo-600 transition-colors"
+                        className="bg-transparent text-[10px] font-bold text-black px-3 h-full outline-none cursor-pointer hover:text-indigo-600 transition-colors uppercase tracking-widest min-w-[80px]"
                     >
                         {MONTHS.map((m, i) => <option key={m} value={i === 0 ? 'all' : i.toString()}>{m}</option>)}
                     </select>
                     
-                    <div className="w-px h-4 bg-neutral-200 mx-1" />
+                    <div className="w-px h-3 bg-neutral-200 mx-1" />
                     
                     <select 
                         value={filterYear} 
                         onChange={(e) => setFilterYear(e.target.value)}
-                        className="bg-transparent text-[11px] font-bold text-black px-3 h-full outline-none cursor-pointer hover:text-indigo-600 transition-colors"
+                        className="bg-transparent text-[10px] font-bold text-black px-3 h-full outline-none cursor-pointer hover:text-indigo-600 transition-colors uppercase tracking-widest min-w-[70px]"
                     >
-                        <option value="all">Tahun</option>
+                        <option value="all">TAHUN</option>
                         {[2024, 2025, 2026].map(y => <option key={y} value={y.toString()}>{y}</option>)}
                     </select>
                 </div>
             </div>
 
             {/* Symmetrical Search Group */}
-            <div className="relative group w-full md:w-[320px]">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-black/30 group-focus-within:text-indigo-500 transition-colors" />
+            <div className="relative group w-full xl:w-[280px]">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-black/30 group-focus-within:text-black transition-colors" />
                 <input 
                     type="text" 
-                    placeholder="Cari transaksi..." 
+                    placeholder="Search query..." 
                     value={search} 
                     onChange={(e) => setSearch(e.target.value)} 
-                    className="pl-11 pr-4 h-11 bg-neutral-50 border border-neutral-100 rounded-xl text-[12px] font-semibold w-full focus:outline-none focus:border-indigo-200 focus:bg-white transition-all outline-none" 
+                    className="pl-11 pr-4 h-10 bg-neutral-50 border border-neutral-100 rounded-xl text-[11px] font-bold w-full focus:outline-none focus:border-black focus:bg-white transition-all outline-none" 
                 />
             </div>
         </div>
 
-        {/* Unified Ledger */}
-        <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar min-h-0">
+        {/* Unified Ledger - RESPONSIVE SCROLL */}
+        <div className="flex-1 overflow-x-auto overflow-y-auto pr-1 custom-scrollbar min-h-0 border-t border-neutral-50 select-none">
           <div className="w-full min-w-[700px]">
              <div className="flex items-center px-4 py-4 border-b border-neutral-50 sticky top-0 bg-white z-10 space-x-4">
               <div className="w-32 text-[10px] font-semibold text-black/40 tracking-tight text-center">Tanggal</div>

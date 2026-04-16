@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import Navbar from "@/components/Navbar";
 import AIChatSidebar from "@/components/AIChatSidebar";
 import { ChatProvider, useChat } from "@/context/ChatContext";
+import { cn } from "@/lib/utils";
 
 function ShellContent({ children }: { children: React.ReactNode }) {
   const { isChatOpen, setIsChatOpen } = useChat();
@@ -24,31 +25,44 @@ function ShellContent({ children }: { children: React.ReactNode }) {
     <body className="h-full overflow-hidden flex flex-col bg-neutral-50 relative">
       <Navbar />
       
-      {/* ADAPTIVE VIEWPORT: Uses CSS Grid to squish content elegantly */}
+      {/* ADAPTIVE VIEWPORT: Uses CSS Grid on desktop, Overlay on mobile */}
       <div className="flex-1 relative w-full h-full overflow-hidden pt-20">
         
         <motion.div 
             initial={false}
             animate={{ 
                 gridTemplateColumns: isChatOpen 
-                    ? "1fr 400px" 
+                    ? (typeof window !== 'undefined' && window.innerWidth >= 1024 ? "1fr 400px" : "1fr 0px")
                     : "1fr 0px" 
             }}
             transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
             style={{ willChange: 'grid-template-columns' }}
-            className="grid h-full w-full overflow-hidden"
+            className="grid lg:grid h-full w-full overflow-hidden"
         >
-            {/* MAIN CONTENT AREA: Resizes automatically (Squishes) */}
-            <main className="h-full w-full px-6 md:px-10 lg:px-12 pb-8 overflow-hidden min-w-0">
+            {/* MAIN CONTENT AREA: Resizes automatically on desktop, full-width on mobile */}
+            <main className="h-full w-full px-4 md:px-10 lg:px-12 pb-8 overflow-hidden min-w-0">
                 {children}
             </main>
 
-            {/* GLOBAL AI SIDEBAR AREA: Accommodates space without shifting content off-screen */}
-            <div className={isChatOpen ? "h-full pr-6 md:pr-10 lg:pr-12 pb-8 pt-3 overflow-hidden" : "overflow-hidden"}>
-                <div className="h-full w-[400px]">
-                    <AIChatSidebar isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
-                </div>
-            </div>
+            {/* GLOBAL AI SIDEBAR AREA: Fixed Overlay on Mobile, Integrated Column on Desktop */}
+            <AnimatePresence>
+                {isChatOpen && (
+                    <motion.div 
+                        initial={{ x: "100%" }}
+                        animate={{ x: 0 }}
+                        exit={{ x: "100%" }}
+                        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                        className={cn(
+                            "h-full z-[60] lg:z-auto overflow-hidden",
+                            "fixed inset-y-20 right-0 w-full md:w-[450px] lg:static lg:w-[400px] lg:pr-12 lg:pb-8 lg:pt-3 bg-white/80 backdrop-blur-xl lg:bg-transparent lg:backdrop-blur-none border-l border-neutral-100 lg:border-none"
+                        )}
+                    >
+                        <div className="h-full w-full p-6 lg:p-0">
+                            <AIChatSidebar isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </motion.div>
       </div>
     </body>

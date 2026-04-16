@@ -162,8 +162,9 @@ const CashflowChart = memo(function CashflowChart() {
       </div>
 
       {/* Chart Area - Vertical DOMINANCE Stretch */}
-      <div className="w-full flex-1 min-h-0 relative min-w-0">
-        <ResponsiveContainer width="100%" height="100%">
+      <div className="w-full flex-1 min-h-[300px] sm:min-h-0 relative min-w-0">
+        <div className="absolute inset-0">
+          <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={chartData} margin={{ top: 10, right: 35, left: 15, bottom: 30 }}>
             <defs>
               <linearGradient id="colorExpense" x1="0" y1="0" x2="0" y2="1">
@@ -304,9 +305,9 @@ const CashflowChart = memo(function CashflowChart() {
           </AreaChart>
         </ResponsiveContainer>
       </div>
-
     </div>
-  );
+  </div>
+);
 });
 
 export default CashflowChart;
